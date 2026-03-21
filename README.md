@@ -7,3 +7,15 @@ Team Contract: https://pennstateoffice365-my.sharepoint.com/:w:/r/personal/jam92
 Final Report: https://pennstateoffice365-my.sharepoint.com/:w:/r/personal/jmg7896_psu_edu/_layouts/15/Doc.aspx?sourcedoc=%7B91FA7E13-9488-45CC-8F09-6B7A5FBADC71%7D&file=Document%201.docx&action=editNew&mobileredirect=true&wdOrigin=WAC.WORD.HOME-BUTTON%2CAPPHOME-WEB.BANNER.NEWBLANK&wdPreviousSession=fef1d5eb-53eb-43ce-005d-9957e38b5a84&wdPreviousSessionSrc=Wac&ct=1770923261069
 
 ER Diagram: https://lucid.app/lucidchart/cd99062f-3bf8-4db4-ad9c-1ccaa2d93d91/edit?viewport_loc=-1181%2C34%2C2201%2C2273%2C0_0&invitationId=inv_2fac177f-5c99-4214-b183-7dc5f7f3923c
+
+## Database Setup
+
+1. Install MySQL Community from https://dev.mysql.com/downloads/mysql/. When installing, you can leave all configurations as default. (Additionally, when making users during setup, we would just recommend making an admin user.) Installation will include creation of a password on your local machine, so be sure to remember this.
+2. Clone this repository in whichever folder you'd like using `git clone https://github.com/jacobm-gavin/431W-nittany-auction`
+3. Open up this repository in PyCharm, and install Pycharm if not already installed (again, leaving all default configurations is usually fine).
+4. Once open in PyCharm, click the databases tab on the right.
+5. Click the add button under 'Database' and add a MySQL 'Data Source'. You can name this whatever you want, such as 'db' or 'nittanyauction.' Here, just make sure to add in a user and your password you set up with MySQL from earlier. The other information such as port should be already configured to the default if you also set up MySQL with the default configurations.
+6. In PyCharm, run the `createDB.sql` file.
+7. Open up the terminal in the bottom left of PyCharm. Make sure you are in the correct directory for the repository, and run the following command: `pip install pandas sqlalchemy pymysql`. All this does is just install the correct dependencies to run the `populateDB.py` script.
+8. In PyCharm, click on and open up the `populateDB.py` file. In the text for db_url, replace 'YOUR_DB_PASSWORD_HERE' with your previously configured password from the MySQL installation. Now, run `populateDB.py`.
+9. At the conclusion of running `populateDB.py`, you should see a message saying "Database successfully populated". To double check, click on your 'nittanyauction' database in the database tab, click on new, and add a new query console. Try a simple SQL query like `SELECT * FROM nittanyauction.users`. You should now see your database is populated.
