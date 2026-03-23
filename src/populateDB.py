@@ -1,11 +1,14 @@
-import pandas as pd
-from sqlalchemy import create_engine
-import hashlib
 import mysql.connector
+import os
+from dotenv import load_dotenv
 import pandas as pd
 import hashlib
 from sqlalchemy import create_engine
-db_url = 'mysql+pymysql://root:Colind1776!@localhost:3306/nittanyauction'
+
+load_dotenv()
+db_password = os.getenv("DB_PASSWORD")
+db_url = f'mysql+pymysql://root:{db_password}@localhost:3306/nittanyauction'
+print(db_url)
 engine = create_engine(db_url)
 
 standard_tables = {

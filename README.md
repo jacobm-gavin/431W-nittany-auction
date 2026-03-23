@@ -10,12 +10,40 @@ ER Diagram: https://lucid.app/lucidchart/cd99062f-3bf8-4db4-ad9c-1ccaa2d93d91/ed
 
 ## Database Setup
 
-1. Install MySQL Community from https://dev.mysql.com/downloads/mysql/. When installing, you can leave all configurations as default. (Additionally, when making users during setup, we would just recommend making an admin user.) Installation will include creation of a password on your local machine, so be sure to remember this.
+1. Install MySQL Community from https://dev.mysql.com/downloads/mysql/. When installing, you can leave all configurations as default. 
+    - Additionally, when making users during setup, we would just recommend making an admin user.
+    - Installation will include creation of a password on your local machine, so be sure to remember this. (We will write it down and save it in a later step.)
+
+
 2. Clone this repository in whichever folder you'd like using `git clone https://github.com/jacobm-gavin/431W-nittany-auction`
+
+
 3. Open up this repository in PyCharm, and install Pycharm if not already installed (again, leaving all default configurations is usually fine).
+
+
 4. Once open in PyCharm, click the databases tab on the right.
-5. Click the add button under 'Database' and add a MySQL 'Data Source'. You can name this whatever you want, such as 'db' or 'nittanyauction.' Here, just make sure to add in a user and your password you set up with MySQL from earlier. The other information such as port should be already configured to the default if you also set up MySQL with the default configurations.
+
+
+5. Click the add button under 'Database' and add a MySQL 'Data Source'. You can name this whatever you want, such as 'db' or 'nittanyauction.' Here, just make sure to add in a user and your password you set up with MySQL from earlier.
+    - The other information such as port should be already configured to the default if you also set up MySQL with the default configurations.
+
+
 6. In PyCharm, run the `createDB.sql` file.
-7. Open up the terminal in the bottom left of PyCharm. Make sure you are in the correct directory for the repository, and run the following command: `pip install pandas sqlalchemy pymysql`. All this does is just install the correct dependencies to run the `populateDB.py` script.
-8. In PyCharm, click on and open up the `populateDB.py` file. In the text for db_url, replace 'YOUR_DB_PASSWORD_HERE' with your previously configured password from the MySQL installation. Now, run `populateDB.py`.
-9. At the conclusion of running `populateDB.py`, you should see a message saying "Database successfully populated". To double check, click on your 'nittanyauction' database in the database tab, click on new, and add a new query console. Try a simple SQL query like `SELECT * FROM nittanyauction.users`. You should now see your database is populated.
+
+
+7. Open up the terminal in the bottom left of PyCharm. Make sure you are in the correct directory for the repository, and run the following command: `pip install pandas sqlalchemy pymysql dotenv mysql-connector-python`. All this does is just install the correct dependencies to run any Python files such as `populateDB.py` or `main.py`. 
+    - If you have any errors, open up any files with imports that are failing. Just click on them and PyCharm will have a button to install the missing dependency.
+
+
+8. In PyCharm, create a new file in the root directory called `.env`. Open `.env`, and paste in `DB_PASSWORD={YOUR_DB_PASSWORD_HERE}`, replacing `{YOUR_DB_PASSWORD_HERE}` with your previously configured MySQL password. 
+
+
+9. Run `populateDB.py`. At the conclusion of running `populateDB.py`, you should see a message saying "Database successfully populated". 
+    - To double check, click on your 'nittanyauction' database in the database tab, click on new, and add a new query console. Try a simple SQL query like `SELECT * FROM nittanyauction.users`. You should now see your database is populated.
+
+## How to Run NittanyAuction
+
+1. Run `main.py`.
+
+
+2. In the terminal, you should see no errors and a link to the port on your localhost where the application is being run. Click this to open it in your browser.

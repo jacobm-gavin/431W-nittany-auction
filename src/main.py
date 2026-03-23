@@ -1,17 +1,19 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import hashlib
 import mysql.connector
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 app.secret_key = "secret_key"
-
+load_dotenv()
 
 def get_user(email):
     try:
         conn = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="Colind1776!",
+            password=os.getenv("DB_PASSWORD"),
             database="nittanyauction"
         )
 
