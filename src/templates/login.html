@@ -7,13 +7,15 @@
 <body class="d-flex flex-column py-4 justify-content-center" style="min-height: 100vh;">
 
     <div>
-        <div>
-            <h1 class="text-center pb-4">Login</h1>
+        <div class="d-flex flex-column justify-content-center">
+            <h1 class="text-center pb-2 fw-bold">Login</h1>
 
             {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
-                <p>{{ message }}</p>
+                <div class="alert alert-danger w-25 m-auto my-auto align-items-center mb-4" role="alert">
+                    <p class="text-center mb-0">{{ message }}</p>
+                </div>
                 {% endfor %}
             {% endif %}
             {% endwith %}
@@ -21,17 +23,17 @@
 
         <div class="justify-content-center py-3 bg-body-tertiary col-lg-3 m-auto border rounded-5">
             <form method="POST" class="form-signin w-100 m-auto py-3 px-5">
-                <!-- <div class=""> -->
-                    <label class="form-label">Email</label><br>
-                    <input class="form-control" type="email" name="email" placeholder="abc123@lsu.edu"><br><br>
-                <!-- </div> -->
-
                 <div class="">
-                    <label class="form-label">Password</label><br>
-                    <input class="form-control" type="password" name="password" placeholder="•••••••••"><br><br>
+                    <label class="col-form-label fw-semibold">Email</label><br>
+                    <input class="form-control fw-light" type="email" name="email" placeholder="abc123@lsu.edu"><br>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">Log In</button>
+                <div class="">
+                    <label class="form-label fw-semibold">Password</label><br>
+                    <input class="form-control fw-light" type="password" name="password" placeholder="•••••••••"><br>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-semibold py-2">Log In</button>
             </form>
         </div>
     </div>
