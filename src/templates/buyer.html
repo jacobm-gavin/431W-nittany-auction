@@ -2,12 +2,34 @@
 <html>
 <head>
     <title>Bidder Welcome</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
-    <h1>Welcome Buyer</h1>
-    <p>You have successfully logged into NittanyAuction as a bidder.</p>
-    <p>Logged in as: {{ user }}</p>
+    <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 px-4 border-bottom bg-primary">
+        <a href="/" class="d-flex align-items-center col-md-3 mb-2 mb-md-0 text-dark text-decoration-none">
+            <h4 class="fw-bold text-white">NittanyAuction</h4>
+        </a>
 
-    <a href="/logout">Log Out</a>
+        <nav class="navbar">
+        <form class="form-inline d-flex">
+            <input class="form-control mr-sm-2" type="search" placeholder="Type to search..." aria-label="Search">
+            <button class="btn btn-outline-light my-2 my-sm-0" type="submit">Search</button>
+        </form>
+        </nav>
+
+        <div class="col-md-3 text-end">
+            <button type="button" class="btn btn-light me-2 text-primary px-4 rounded-3">Sell Item</button>
+            <button type="button" class="btn btn-outline-light me-2 px-4 rounded-3">My Account</button>
+            <a href="/logout" type="button" class="btn btn-outline-light px-4 rounded-3">Logout</a>
+        </div>
+    </header>
+
+    <div class="mx-5">
+        <h1 class="fw-bold">Welcome, Buyer</h1>
+        <p>You have successfully logged into NittanyAuction as a bidder.</p>
+        <p>Logged in as: {{ user }}</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>
