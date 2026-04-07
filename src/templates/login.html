@@ -2,26 +2,39 @@
 <html>
 <head>
     <title>NittanyAuction Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
-<body>
-    <h1>Login</h1>
+<body class="d-flex flex-column py-4 justify-content-center" style="min-height: 100vh;">
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        {% for message in messages %}
-          <p>{{ message }}</p>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+    <div>
+        <div>
+            <h1 class="text-center pb-4">Login</h1>
 
-    <form method="POST">
-        <label>Email:</label><br>
-        <input type="email" name="email"><br><br>
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                <p>{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
 
-        <label>Password:</label><br>
-        <input type="password" name="password"><br><br>
+        <div class="justify-content-center py-3 bg-body-tertiary col-lg-3 m-auto border rounded-5">
+            <form method="POST" class="form-signin w-100 m-auto py-3 px-5">
+                <!-- <div class=""> -->
+                    <label class="form-label">Email</label><br>
+                    <input class="form-control" type="email" name="email" placeholder="abc123@lsu.edu"><br><br>
+                <!-- </div> -->
 
-        <button type="submit">Log In</button>
-    </form>
+                <div class="">
+                    <label class="form-label">Password</label><br>
+                    <input class="form-control" type="password" name="password" placeholder="•••••••••"><br><br>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Log In</button>
+            </form>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>
