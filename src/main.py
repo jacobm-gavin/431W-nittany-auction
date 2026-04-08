@@ -67,7 +67,7 @@ def get_auction_listings():
 
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("SELECT * FROM auction_listings")
+        cursor.execute("SELECT * FROM auction_listings WHERE status = 1") # updated to only show active items
         listings = cursor.fetchall()
 
         if listings is None:
@@ -84,6 +84,74 @@ def get_auction_listings():
     except mysql.connector.Error as err:
         print("Database error:", err)
         return None
+    
+def get_listing(listing_ID):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM auction_listings WHERE Listing_ID = %s", (listing_ID,))
+        listing = cursor.fetchone()
+
+        if listing is None:
+            cursor.close()
+            conn.close()
+            return None
+        
+        cursor.close()
+        conn.close()
+        print("AUCTION LISTING FETCHED:", listing)
+
+        return listing
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+
+def get_bids(listing_ID):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM bids WHERE Listing_ID = %s", (listing_ID,))
+        bids = cursor.fetchall()
+
+        if bids is None:
+            cursor.close()
+            conn.close()
+            return None
+
+        cursor.close()
+        conn.close()
+        print("BIDS FETCHED:", bids)
+
+        return bids
+
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+    
+# just a helper function once bids are retrieved
+def get_latest_bid(bids):
+    if bids:
+        latestbid = bids[0]
+        for bid in bids:
+            if bid["bid_price"] > latestbid["bid_price"]:
+                latestbid = bid
+        return latestbid
+    return None
 
 @app.route("/")
 def home():
@@ -145,6 +213,7 @@ def buyer():
         return redirect(url_for("login"))
     
     listings = get_auction_listings()
+
     return render_template("buyer.html", user=session["user"], listings=listings)
 
 
@@ -168,6 +237,19 @@ def logout():
     flash("You have been logged out.")
     return redirect(url_for("login"))
 
+@app.route("/auction_listing/<int:listing_ID>") # slight error; primary key for listing items is actually seller + listingID, will just keep this for now but should probably update later
+def auction_listing(listing_ID):
+    if "user" not in session or session.get("role") != "buyer":
+        return redirect(url_for("login"))
+    
+    listing = get_listing(listing_ID)
+    bids = get_bids(listing_ID)
+    numbids = len(bids)
+
+    # find latest/current bid just by maximum bid_price
+    latestbid = get_latest_bid(bids)
+        
+    return render_template("auction_listing.html", user=session["user"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
 
 if __name__ == "__main__":
     app.run(debug=True)

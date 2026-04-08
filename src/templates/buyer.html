@@ -6,7 +6,7 @@
 </head>
 <body class="bg-body-tertiary justify-content-center">
     <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 px-4 border-bottom bg-primary">
-        <a href="/" class="d-flex align-items-center col-md-3 mb-2 mb-md-0 text-dark text-decoration-none">
+        <a href="/buyer" class="d-flex align-items-center col-md-3 mb-2 mb-md-0 text-dark text-decoration-none">
             <h4 class="fw-bold text-white">NittanyAuction</h4>
         </a>
 
@@ -27,28 +27,35 @@
     <div class="d-flex flex-row justify-content-center">
         <div class="d-flex mx-5 justify-content-center align-items-start" style="height: 60vh; width: 75vw;">
             <div id="categories" class="card me-4 p-4 rounded-4 w-25 border">
-                <h5 class="fw-normal">Categories</h5>
+                <h5 class="fw-light">Categories</h5>
             </div>
             <div id="browse-items" class="ms-4 w-75">
-                <h1 class="fw-bold">Welcome, Buyer</h1>
-                <p>You have successfully logged into NittanyAuction as a bidder.</p>
-                <p>Logged in as: {{ user }}</p>
-                <div class="container">
-                    <div class="row row-cols-3">
+                <h1 class="fw-bold fs-1">Welcome, Buyer</h1> <!-- this is placeholder text -->
+                <p class="fw-light fs-5">Logged in as: {{ user }}</p> <!-- this can also be placeholder text, will probably move something like this into a pop-up under the "My Account" button -->
+                <div class="container px-0">
+                    <div class="row row-cols-3 g-4">
                         {% for listing in listings %}
-                        <div class="col card p-4 rounded-4 border h-10">
-                            <h5 class="fw-normal">{{ listing.auction_title }}</h5>
-                            <p class="card-text">{{ listing.product_description }}</p>
+                        <div class="col">
+                            <div class="d-flex flex-column justify-content-between h-100 card p-4 rounded-4 border h-10">
+                                <div class="mb-4">
+                                    <span class="fw-medium fs-5">{{ listing.auction_title }}</span>
+                                    <p class="fw-light fs-6 card-text">{{ listing.product_description }}</p>
+                                    <hr></hr>
+                                    <div id="card-auction-info">
+                                    <div class="d-flex flex-row justify-content-between">
+                                        <span class="fw-light">Current bid</span>
+                                        <span class="fw-bold text-primary">N/A</span> <!-- placeholder for now -->
+                                    </div>
+                                    <div class="d-flex flex-row justify-content-between">
+                                        <span class="fw-light">Bids</span>
+                                        <span class="fw-bold text-primary">N/A</span> <!-- another placeholder for now, could alternatively swap with some other info -->
+                                    </div>
+                                </div>
+                                </div>
+                                <a class="btn btn-primary fw-medium" href="auction_listing/{{ listing.listing_ID }}">View</a>
+                            </div>
                         </div>
                         {% endfor %}
-                        <!-- <div class="col card p-4 rounded-4 border h-10">
-                            <h5 class="fw-normal">Item</h5>
-                            <p class="card-text">Current Bid</p>
-                        </div>
-                        <div class="col card p-4 rounded-4 border h-10">
-                            <h5 class="fw-normal">Item</h5>
-                            <p class="card-text">Current Bid</p>
-                        </div> -->
                     </div>
                 </div>
             </div>
