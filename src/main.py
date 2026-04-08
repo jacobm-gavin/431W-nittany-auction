@@ -55,7 +55,35 @@ def get_user(email):
     except mysql.connector.Error as err:
         print("Database error:", err)
         return None
+    
+def get_auction_listings():
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
 
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM auction_listings")
+        listings = cursor.fetchall()
+
+        if listings is None:
+            cursor.close()
+            conn.close()
+            return None
+        
+        cursor.close()
+        conn.close()
+        print("AUCTION LISTINGS FETCHED:", listings)
+
+        return listings
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
 
 @app.route("/")
 def home():
@@ -115,7 +143,9 @@ def login():
 def buyer():
     if "user" not in session or session.get("role") != "buyer":
         return redirect(url_for("login"))
-    return render_template("buyer.html", user=session["user"])
+    
+    listings = get_auction_listings()
+    return render_template("buyer.html", user=session["user"], listings=listings)
 
 
 @app.route("/seller")
