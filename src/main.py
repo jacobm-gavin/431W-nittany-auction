@@ -77,7 +77,7 @@ def get_auction_listings():
         
         cursor.close()
         conn.close()
-        print("AUCTION LISTINGS FETCHED:", listings)
+        # print("AUCTION LISTINGS FETCHED:", listings)
 
         return listings
     
@@ -106,13 +106,43 @@ def get_listing(listing_ID):
         
         cursor.close()
         conn.close()
-        print("AUCTION LISTING FETCHED:", listing)
+        # print("AUCTION LISTING FETCHED:", listing)
 
         return listing
     
     except mysql.connector.Error as err:
         print("Database error:", err)
         return None
+
+def get_categories():
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM categories")
+        categories = cursor.fetchall()
+
+        if categories is None:
+            cursor.close()
+            conn.close()
+            return None
+        
+        cursor.close()
+        conn.close()
+        # print("CATEGORIES FETCHED:", categories)
+
+        return categories
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+
 
 def get_bids(listing_ID):
     try:
@@ -135,7 +165,7 @@ def get_bids(listing_ID):
 
         cursor.close()
         conn.close()
-        print("BIDS FETCHED:", bids)
+        # print("BIDS FETCHED:", bids)
 
         return bids
 
@@ -152,6 +182,18 @@ def get_latest_bid(bids):
                 latestbid = bid
         return latestbid
     return None
+
+# parses raw category data from SQL into the proper hierarchy
+def parse_categories(category_data):
+    categories = {}
+    for category in category_data:
+        if category["parent_category"] not in categories:
+            categories[category["parent_category"]] = []
+            
+        categories[category["parent_category"]].append(category["category_name"])
+            
+    # print("TEST", categories)
+    return categories
 
 @app.route("/")
 def home():
@@ -213,8 +255,9 @@ def buyer():
         return redirect(url_for("login"))
     
     listings = get_auction_listings()
+    categories = parse_categories(get_categories())
 
-    return render_template("buyer.html", user=session["user"], listings=listings)
+    return render_template("buyer.html", user=session["user"], listings=listings, categories=categories)
 
 
 @app.route("/seller")

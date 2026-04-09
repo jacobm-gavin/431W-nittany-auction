@@ -27,7 +27,21 @@
     <div class="d-flex flex-row justify-content-center">
         <div class="d-flex mx-5 justify-content-center align-items-start" style="height: 60vh; width: 75vw;">
             <div id="categories" class="card me-4 p-4 rounded-4 w-25 border">
-                <h5 class="fw-light">Categories</h5>
+                <h5 class="fw-bold fs-4">Categories</h5>
+                {% macro render_categories(parent, categories) %}
+                    {% if categories.get(parent) %}
+                        <ul class="fs-5 list-inline ms-3">
+                            {% for child in categories.get(parent) %}
+                                <li>
+                                    <span class="fw-light list-group-item">{{ child }}</span>
+                                    {{ render_categories(child, categories) }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endmacro %}
+
+                {{ render_categories("Root", categories) }}
             </div>
             <div id="browse-items" class="ms-4 w-75">
                 <h1 class="fw-bold fs-1">Welcome, Buyer</h1> <!-- this is placeholder text -->
