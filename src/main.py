@@ -56,7 +56,7 @@ def get_user(email):
         print("Database error:", err)
         return None
     
-def get_auction_listings():
+def get_auction_listings(category):
     try:
         conn = mysql.connector.connect(
             host="localhost",
@@ -67,7 +67,10 @@ def get_auction_listings():
 
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("SELECT * FROM auction_listings WHERE status = 1") # updated to only show active items
+        if (category == None):
+            cursor.execute("SELECT * FROM auction_listings WHERE status = 1") # updated to only show active items
+        else:
+            cursor.execute("SELECT * FROM auction_listings WHERE status = 1 AND category = %s", (category,))
         listings = cursor.fetchall()
 
         if listings is None:
@@ -254,10 +257,22 @@ def buyer():
     if "user" not in session or session.get("role") != "buyer":
         return redirect(url_for("login"))
     
-    listings = get_auction_listings()
+    listings = get_auction_listings(None)
     categories = parse_categories(get_categories())
+    category = None
 
-    return render_template("buyer.html", user=session["user"], listings=listings, categories=categories)
+    return render_template("buyer.html", user=session["user"], listings=listings, categories=categories, category=category)
+
+@app.route("/buyer/<string:category>")
+def buyer_category(category):
+    if "user" not in session or session.get("role") != "buyer":
+        return redirect(url_for("login"))
+    
+    listings = get_auction_listings(category)
+    categories = parse_categories(get_categories())
+    category=category
+
+    return render_template("buyer.html", user=session["user"], listings=listings, categories=categories, category=category)
 
 
 @app.route("/seller")
