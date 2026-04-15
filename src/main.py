@@ -88,6 +88,35 @@ def get_auction_listings(category):
         print("Database error:", err)
         return None
     
+def get_seller_listings(email):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM auction_listings WHERE seller_email = %s", (email,))
+        listings = cursor.fetchall()
+
+        if listings is None:
+            cursor.close()
+            conn.close()
+            return None
+        
+        cursor.close()
+        conn.close()
+        # print("AUCTION LISTINGS FETCHED:", listings)
+
+        return listings
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+    
 def get_listing(listing_ID):
     try:
         conn = mysql.connector.connect(
@@ -279,7 +308,26 @@ def buyer_category(category):
 def seller():
     if "user" not in session or session.get("role") != "seller":
         return redirect(url_for("login"))
-    return render_template("seller.html", user=session["user"])
+    
+    email = session["user"]
+    listings = get_seller_listings(email)
+
+    # separate lists for each category of listing (active, inactive, sold)
+    # just so it's easier on the rendering side
+    active = []
+    inactive = []
+    sold = []
+
+    for listing in listings:
+        if listing["status"] == 0:
+            inactive.append(listing)
+        elif listing["status"] == 1:
+            active.append(listing)
+        elif listing["status"] == 2:
+            sold.append(listing)
+
+    # numA, numIA, and numS is just length of active (A), inactive (IA), and sold (S) arrays respectively
+    return render_template("seller.html", user=session["user"], active=active, inactive=inactive, sold=sold, numA=len(active), numIA=len(inactive), numS=len(sold))
 
 
 @app.route("/helpdesk")
