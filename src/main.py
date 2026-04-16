@@ -333,6 +333,7 @@ def login():
 
         session["user"] = email
         session["role"] = user["role"]
+        session["seller_type"] = "none"
 
         if user["role"] == "buyer":
             return redirect(url_for("buyer"))
@@ -349,27 +350,33 @@ def login():
 
 @app.route("/buyer")
 def buyer():
-    if "user" not in session or session.get("role") != "buyer":
+    if "user" not in session and session["seller_type"] != "vendor":
         return redirect(url_for("login"))
     
     listings = get_auction_listings(None)
     categories = parse_categories(get_categories())
     category = None
     email = session["user"]
-    first_name = get_first_name(email)
+    name = get_first_name(email)
+    if name == None:
+        name = get_business_name(email)
 
-    return render_template("buyer.html", user=session["user"], first_name=first_name, listings=listings, categories=categories, category=category)
+    return render_template("buyer.html", user=session["user"], role=session["role"], name=name, listings=listings, categories=categories, category=category)
 
 @app.route("/buyer/<string:category>")
 def buyer_category(category):
-    if "user" not in session or session.get("role") != "buyer":
+    if "user" not in session and session["seller_type"] != "vendor":
         return redirect(url_for("login"))
     
     listings = get_auction_listings(category)
     categories = parse_categories(get_categories())
-    category=category
+    category = category
+    email = session["user"]
+    name = get_first_name(email)
+    if name == None:
+        name = get_business_name(email)
 
-    return render_template("buyer.html", user=session["user"], listings=listings, categories=categories, category=category)
+    return render_template("buyer.html", user=session["user"], role=session["role"], name=name, listings=listings, categories=categories, category=category)
 
 
 @app.route("/seller")
@@ -379,8 +386,15 @@ def seller():
     
     email = session["user"]
     name = get_first_name(email)
+    session["seller_type"] = "student"
+
+    # in the dataset, all student sellers are also bidders
+    # but the sellers that are local vendors are not in bidders table
+    # this means we should keep track of who's a local vendor
+    # because local vendors are not bidders, so they should not be able to browse
     if name == None:
         name = get_business_name(email)
+        session["seller_type"] = "vendor"
 
     listings = get_seller_listings(email)
 
@@ -399,7 +413,7 @@ def seller():
             sold.append(listing)
 
     # numA, numIA, and numS is just length of active (A), inactive (IA), and sold (S) arrays respectively
-    return render_template("seller.html", user=session["user"], name=name, active=active, inactive=inactive, sold=sold, numA=len(active), numIA=len(inactive), numS=len(sold))
+    return render_template("seller.html", user=session["user"], seller_type=session["seller_type"], name=name, active=active, inactive=inactive, sold=sold, numA=len(active), numIA=len(inactive), numS=len(sold))
 
 
 @app.route("/helpdesk")
@@ -428,7 +442,7 @@ def auction_listing(seller_email, listing_ID):
     # find latest/current bid just by maximum bid_price
     latestbid = get_latest_bid(bids)
         
-    return render_template("auction_listing.html", user=session["user"], role=session["role"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
+    return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
 
 if __name__ == "__main__":
     app.run(debug=True)
