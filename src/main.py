@@ -444,5 +444,14 @@ def auction_listing(seller_email, listing_ID):
         
     return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
 
+@app.route("/sell_item", methods=["GET", "POST"])
+def sell_item():
+    if "user" not in session and session["role"] != "seller":
+        return redirect(url_for("login"))
+    
+    categories = parse_categories(get_categories())
+    
+    return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -20,7 +20,7 @@
 
         <div class="col-md-3 text-end">
             {% if role == "seller" %}
-                <button type="button" class="btn btn-light me-2 text-primary px-4 rounded-3">Sell Item</button>
+                <a href="/sell_item" type="button" class="btn btn-light me-2 text-primary px-4 rounded-3">Sell Item</a>
                 <a href="/seller" type="button" class="btn btn-outline-light me-2 px-4 rounded-3">Dashboard</a>
             {% endif %}
             <button type="button" class="btn btn-outline-light me-2 px-4 rounded-3">My Account</button>
@@ -88,7 +88,7 @@
                                         </div>
                                     </div>
                                     </div>
-                                    <a class="btn btn-primary fw-medium" href="auction_listing/{{ listing.seller_email }}/{{ listing.listing_ID }}">View</a>
+                                    <a class="btn btn-primary fw-medium" href="/auction_listing/{{ listing.seller_email }}/{{ listing.listing_ID }}">View</a>
                                 </div>
                             </div>
                             {% endfor %}
