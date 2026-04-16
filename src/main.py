@@ -8,6 +8,8 @@ app = Flask(__name__)
 app.secret_key = "secret_key"
 load_dotenv()
 
+# SQL FUNCTIONS
+
 def get_user(email):
     try:
         conn = mysql.connector.connect(
@@ -204,8 +206,71 @@ def get_bids(listing_ID):
     except mysql.connector.Error as err:
         print("Database error:", err)
         return None
-    
-# just a helper function once bids are retrieved
+
+def get_first_name(email):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT first_name FROM bidders WHERE email = %s", (email,))
+        first_name = cursor.fetchone()
+
+        if first_name is None:
+            cursor.close()
+            conn.close()
+            return None
+
+        first_name = first_name["first_name"]
+
+        cursor.close()
+        conn.close()
+
+        return first_name
+
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+
+def get_business_name(email):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT business_name FROM local_vendors WHERE email = %s", (email,))
+        business_name = cursor.fetchone()
+
+        if business_name is None:
+            cursor.close()
+            conn.close()
+            return None
+
+        business_name = business_name["business_name"]
+
+        cursor.close()
+        conn.close()
+
+        return business_name
+
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+
+# HELPER FUNCTIONS
+
+# Input - Retrieved bids on a listing from database
+# Output - Latest bid on that listing
 def get_latest_bid(bids):
     if bids:
         latestbid = bids[0]
@@ -215,7 +280,8 @@ def get_latest_bid(bids):
         return latestbid
     return None
 
-# parses raw category data from SQL into the proper hierarchy
+# Input - Raw category data from the database
+# Output - Hierarchal categories array for easier HTML rendering
 def parse_categories(category_data):
     categories = {}
     for category in category_data:
@@ -289,8 +355,10 @@ def buyer():
     listings = get_auction_listings(None)
     categories = parse_categories(get_categories())
     category = None
+    email = session["user"]
+    first_name = get_first_name(email)
 
-    return render_template("buyer.html", user=session["user"], listings=listings, categories=categories, category=category)
+    return render_template("buyer.html", user=session["user"], first_name=first_name, listings=listings, categories=categories, category=category)
 
 @app.route("/buyer/<string:category>")
 def buyer_category(category):
@@ -310,6 +378,10 @@ def seller():
         return redirect(url_for("login"))
     
     email = session["user"]
+    name = get_first_name(email)
+    if name == None:
+        name = get_business_name(email)
+
     listings = get_seller_listings(email)
 
     # separate lists for each category of listing (active, inactive, sold)
@@ -327,7 +399,7 @@ def seller():
             sold.append(listing)
 
     # numA, numIA, and numS is just length of active (A), inactive (IA), and sold (S) arrays respectively
-    return render_template("seller.html", user=session["user"], active=active, inactive=inactive, sold=sold, numA=len(active), numIA=len(inactive), numS=len(sold))
+    return render_template("seller.html", user=session["user"], name=name, active=active, inactive=inactive, sold=sold, numA=len(active), numIA=len(inactive), numS=len(sold))
 
 
 @app.route("/helpdesk")
@@ -343,19 +415,20 @@ def logout():
     flash("You have been logged out.")
     return redirect(url_for("login"))
 
-@app.route("/auction_listing/<int:listing_ID>") # slight error; primary key for listing items is actually seller + listingID, will just keep this for now but should probably update later
-def auction_listing(listing_ID):
-    if "user" not in session or session.get("role") != "buyer":
+@app.route("/auction_listing/<string:seller_email>/<int:listing_ID>")
+def auction_listing(seller_email, listing_ID):
+    if "user" not in session:
         return redirect(url_for("login"))
     
     listing = get_listing(listing_ID)
     bids = get_bids(listing_ID)
     numbids = len(bids)
+    # print(session["user"])
 
     # find latest/current bid just by maximum bid_price
     latestbid = get_latest_bid(bids)
         
-    return render_template("auction_listing.html", user=session["user"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
+    return render_template("auction_listing.html", user=session["user"], role=session["role"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
 
 if __name__ == "__main__":
     app.run(debug=True)

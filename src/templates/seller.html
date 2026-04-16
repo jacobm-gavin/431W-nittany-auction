@@ -31,7 +31,7 @@
     <div class="d-flex flex-row justify-content-center">
         <div class="d-flex mx-5 justify-content-center align-items-start" style="height: 60vh; width: 75vw;">
             <div class="ms-4 w-75">
-                <h1 class="fw-bold fs-1">Welcome, Seller</h1> <!-- this is placeholder text -->
+                <h1 class="fw-bold fs-1">{{ name }}'s Seller Dashboard</h1>
                 <p class="fw-light fs-5">Logged in as: {{ user }}</p> <!-- this can also be placeholder text, will probably move something like this into a pop-up under the "My Account" button -->
                 
                 <hr>
@@ -48,7 +48,7 @@
                                         <span class="fw-medium fs-5">{{ listing.auction_title }}</span>
                                         <p class="fw-light fs-6 card-text">{{ listing.product_description }}</p>
                                         <hr></hr>
-                                        <div id="card-auction-info">
+                                        <div>
                                         <div class="d-flex flex-row justify-content-between">
                                             <span class="fw-light">Current bid</span>
                                             <span class="fw-bold text-primary">N/A</span> <!-- placeholder for now -->
@@ -59,7 +59,7 @@
                                         </div>
                                     </div>
                                     </div>
-                                    <a class="btn btn-primary fw-medium" href="auction_listing/{{ listing.listing_ID }}">View</a>
+                                    <a class="btn btn-primary fw-medium" href="auction_listing/{{ listing.seller_email }}/{{ listing.listing_ID }}">View</a>
                                 </div>
                             </div>
                             {% endfor %}
@@ -69,12 +69,12 @@
                     </div>
                 </div>
 
-                {% if sold %}
                 <br>
+                {% if sold %}
                 <hr>
 
                 <h2 class="mb-3 mt-5">Sold Listings ({{ numS }})</h2>
-                <div id="active-listings" class="container px-0 mb-5">
+                <div id="sold-listings" class="container px-0 mb-5">
                     <div class="row row-cols-3 g-4">
                             {% for listing in sold %}
                             <div class="col">
@@ -83,7 +83,7 @@
                                         <span class="fw-medium fs-5">{{ listing.auction_title }}</span>
                                         <p class="fw-light fs-6 card-text">{{ listing.product_description }}</p>
                                         <hr></hr>
-                                        <div id="card-auction-info">
+                                        <div>
                                         <div class="d-flex flex-row justify-content-between">
                                             <span class="fw-light">Current bid</span>
                                             <span class="fw-bold text-primary">N/A</span> <!-- placeholder for now -->
@@ -94,7 +94,7 @@
                                         </div>
                                     </div>
                                     </div>
-                                    <a class="btn btn-primary fw-medium" href="auction_listing/{{ listing.listing_ID }}">View</a>
+                                    <a class="btn btn-primary fw-medium" href="auction_listing/{{ listing.seller_email }}/{{ listing.listing_ID }}">View</a>
                                 </div>
                             </div>
                             {% endfor %}
@@ -109,7 +109,7 @@
 
                 
                 <h2 class="mb-3 mt-5">Inactive Listings ({{ numIA }})</h2>
-                <div id="active-listings" class="container px-0 mb-5">
+                <div id="inactive-listings" class="container px-0 mb-5">
                     <div class="row row-cols-3 g-4">
                             {% for listing in inactive %}
                             <div class="col">
@@ -118,7 +118,7 @@
                                         <span class="fw-medium fs-5">{{ listing.auction_title }}</span>
                                         <p class="fw-light fs-6 card-text">{{ listing.product_description }}</p>
                                         <hr></hr>
-                                        <div id="card-auction-info">
+                                        <div>
                                         <div class="d-flex flex-row justify-content-between">
                                             <span class="fw-light">Current bid</span>
                                             <span class="fw-bold text-primary">N/A</span> <!-- placeholder for now -->
@@ -129,7 +129,7 @@
                                         </div>
                                     </div>
                                     </div>
-                                    <a class="btn btn-primary fw-medium" href="auction_listing/{{ listing.listing_ID }}">View</a>
+                                    <a class="btn btn-primary fw-medium" href="auction_listing/{{ listing.seller_email }}/{{ listing.listing_ID }}">View</a>
                                 </div>
                             </div>
                             {% endfor %}

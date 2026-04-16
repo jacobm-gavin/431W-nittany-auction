@@ -60,7 +60,7 @@
             </div>
             <!-- Right side of page (items/browse)-->
             <div id="browse-items" class="ms-4 w-75">
-                <h1 class="fw-bold fs-1">Welcome, Buyer</h1> <!-- this is placeholder text -->
+                <h1 class="fw-bold fs-1">Welcome, {{ first_name }}</h1> <!-- this is placeholder text -->
                 <p class="fw-light fs-5">Logged in as: {{ user }}</p> <!-- this can also be placeholder text, will probably move something like this into a pop-up under the "My Account" button -->
                 {% if category %}
                     <span class="badge rounded-pill text-bg-primary mb-4 px-4 py-2 fs-6">{{ category }}</span>
@@ -86,7 +86,7 @@
                                         </div>
                                     </div>
                                     </div>
-                                    <a class="btn btn-primary fw-medium" href="auction_listing/{{ listing.listing_ID }}">View</a>
+                                    <a class="btn btn-primary fw-medium" href="auction_listing/{{ listing.seller_email }}/{{ listing.listing_ID }}">View</a>
                                 </div>
                             </div>
                             {% endfor %}
