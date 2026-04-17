@@ -119,7 +119,7 @@ def get_seller_listings(email):
         print("Database error:", err)
         return None
     
-def get_listing(listing_ID):
+def get_listing(seller_email, listing_ID):
     try:
         conn = mysql.connector.connect(
             host="localhost",
@@ -130,7 +130,7 @@ def get_listing(listing_ID):
 
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("SELECT * FROM auction_listings WHERE Listing_ID = %s", (listing_ID,))
+        cursor.execute("SELECT * FROM auction_listings WHERE seller_email = %s AND Listing_ID = %s", (seller_email, listing_ID,))
         listing = cursor.fetchone()
 
         if listing is None:
@@ -287,6 +287,31 @@ def insert_listing(seller_email, listing_ID, category, auction_title, product_na
         cursor.close()
         conn.close()
         print("SUCCESSFULLY INSERTED")
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+
+# SQL UPDATES
+
+def update_listing(seller_email, listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("UPDATE auction_listings SET category = %s, auction_title = %s, product_name = %s, product_description = %s, quantity = %s, reserve_price = %s, max_bids = %s, status = %s WHERE seller_email = %s AND listing_ID = %s", (category, auction_title, product_name, product_description, quantity, reserve_price, max_bids, 1, seller_email, listing_ID,))
+
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        print("SUCCESSFULLY UPDATED")
     
     except mysql.connector.Error as err:
         print("Database error:", err)
@@ -459,7 +484,7 @@ def auction_listing(seller_email, listing_ID):
     if "user" not in session:
         return redirect(url_for("login"))
     
-    listing = get_listing(listing_ID)
+    listing = get_listing(seller_email, listing_ID)
     bids = get_bids(listing_ID)
     numbids = len(bids)
     # print(session["user"])
@@ -485,8 +510,6 @@ def sell_item():
         max_bids = request.form.get("max_bids", "").strip()
         category = request.form.get("category", "").strip()
 
-        # print(category)
-
         if not auction_title or not product_name or not product_description or not reserve_price or not quantity or not max_bids or category == "Select a category":
             flash("Please complete all fields.")
             return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
@@ -511,6 +534,35 @@ def sell_item():
         return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
     
     return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
+
+@app.route("/edit_item/<string:seller_email>/<int:listing_ID>", methods=["GET", "POST"])
+def edit_item(seller_email, listing_ID):
+    if "user" not in session and session["role"] != "seller":
+        return redirect(url_for("login"))
+    
+    listing = get_listing(seller_email, listing_ID)
+    categories = parse_categories(get_categories())
+
+    if request.method == "POST":
+        auction_title = request.form.get("auction_title", "").strip()
+        product_name = request.form.get("product_name", "").strip()
+        product_description = request.form.get("product_description", "").strip()
+        reserve_price = request.form.get("reserve_price", "").strip()
+        quantity = request.form.get("quantity", "").strip()
+        max_bids = request.form.get("max_bids", "").strip()
+        category = request.form.get("category", "").strip()
+
+        if auction_title is "" or product_name is "" or product_description is "" or reserve_price is "" or quantity is "" or max_bids is "" or category is "":
+            flash("Please fill in all fields.")
+            return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
+        
+        update_listing(seller_email, listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids)
+        listing = get_listing(seller_email, listing_ID)
+
+        flash("Item successfully updated!")
+        return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
+    
+    return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
 
 if __name__ == "__main__":
     app.run(debug=True)

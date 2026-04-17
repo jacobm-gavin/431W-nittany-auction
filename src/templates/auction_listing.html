@@ -18,8 +18,6 @@
         </nav>
 
         <div class="col-md-3 text-end">
-            <!-- UNCOMMENT FOR SELLER PAGE -->
-
             {% if role == "seller" %}
                 <button type="button" class="btn btn-light me-2 text-primary px-4 rounded-3">Sell Item</button>
                 {% if seller_type == "student" %}
@@ -38,8 +36,8 @@
     <div class="d-flex justify-content-center mb-4">
         <div class="d-flex mx-5 justify-content-between align-items-start gap-4" style="width: 75vw;">
             <button onclick="history.back()" class="btn btn-outline-primary px-4">Back</button>
-            {% if listing.seller_email == user %}
-                <button class="btn btn-primary px-4">Edit</button>
+            {% if listing.seller_email == user and numbids == 0 %}
+                <a href="/edit_item/{{ listing.seller_email }}/{{ listing.listing_ID }}" class="btn btn-primary px-4">Edit</a>
             {% endif %}
         </div>
     </div>
@@ -49,7 +47,7 @@
             <div id="auction-info" class="card p-4 rounded-4 border w-100">
                 <h1>{{ listing.auction_title }}</h1>
                 <p class="card-text fw-light fs-5">{{ listing.category }}</p>
-                {% if numbids == listing.max_bids %}
+                {% if numbids >= listing.max_bids %}
                 <span class="badge text-bg-primary col-1 py-2 mb-3">Sold</span>
                 {% endif %}
                 <div class="fw-bold fs-5 card-text">Current Bid</div>
