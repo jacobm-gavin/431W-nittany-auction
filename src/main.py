@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.secret_key = "secret_key"
 load_dotenv()
 
-# SQL FUNCTIONS
+# SQL GETTERS
 
 def get_user(email):
     try:
@@ -266,6 +266,31 @@ def get_business_name(email):
     except mysql.connector.Error as err:
         print("Database error:", err)
         return None
+    
+# SQL INSERTS
+
+def insert_listing(seller_email, listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("INSERT INTO auction_listings VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (seller_email, listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids, 1))
+
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        print("SUCCESSFULLY INSERTED")
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
 
 # HELPER FUNCTIONS
 
@@ -450,6 +475,40 @@ def sell_item():
         return redirect(url_for("login"))
     
     categories = parse_categories(get_categories())
+
+    if request.method == "POST":
+        auction_title = request.form.get("auction_title", "").strip()
+        product_name = request.form.get("product_name", "").strip()
+        product_description = request.form.get("product_description", "").strip()
+        reserve_price = request.form.get("reserve_price", "").strip()
+        quantity = request.form.get("quantity", "").strip()
+        max_bids = request.form.get("max_bids", "").strip()
+        category = request.form.get("category", "").strip()
+
+        # print(category)
+
+        if not auction_title or not product_name or not product_description or not reserve_price or not quantity or not max_bids or category == "Select a category":
+            flash("Please complete all fields.")
+            return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
+        
+        # NOTE
+        # listing_IDs for auction_listings seem to be randomly generated numbers in the given dataset
+        # in order to insert new listings while making sure listing_IDs are unique...
+        # we will keep schema as is and just increment ID numbers from the highest existing ID for each seller
+        
+        # E.g.
+        # if a seller has 2 listings with IDs of 4 and 281...
+        # making a new listing will have an ID of 282
+        seller_listings = get_seller_listings(session["user"])
+        listing_IDs = []
+        for listing in seller_listings:
+            listing_IDs.append(listing["listing_ID"])
+
+        new_listing_ID = max(listing_IDs) + 1 # creating new listing_ID
+        insert_listing(session["user"], new_listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids)
+
+        flash("Item successfully added!")
+        return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
     
     return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
 

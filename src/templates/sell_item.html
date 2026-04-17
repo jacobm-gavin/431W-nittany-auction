@@ -32,11 +32,33 @@
     </header>
 
     <div class="d-flex justify-content-center mb-4">
-        <div class="col-4" style="width: 50vw;">
-            <button onclick="history.back()" class="btn btn-outline-primary px-4">Back</button>
+        <div class="d-flex justify-content-between" style="width: 50vw;">
+            <div class="d-flex col-3 align-items-end">
+                <button onclick="history.back()" class="btn btn-outline-primary px-4">Back</button>
+            </div>
+            <div class="col-6">
+                <!-- <div class="alert alert-primary m-auto" role="alert">
+                    <p class="text-center mb-0">Item successfully added!</p>
+                </div> -->
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            {% if message == "Item successfully added!" %}
+                                <div class="alert alert-primary m-auto" role="alert">
+                                    <p class="text-center mb-0">{{ message }}</p>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-danger m-auto" role="alert">
+                                    <p class="text-center mb-0">{{ message }}</p>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <div class="col-3"></div>
         </div>
     </div>
-
     
     <div class="mb-5">
         <div class="justify-content-center py-3 col-lg-6 m-auto border rounded-5 bg-white">
@@ -64,7 +86,7 @@
                         <label class="form-label fw-semibold">Reserve Price</label><br>
                         <div class="input-group mb-3">
                             <span class="input-group-text fs-5">$</span>
-                            <input class="form-control fw-light fs-5" type="number" name="max_bids" placeholder="5" min="1"><br>
+                            <input class="form-control fw-light fs-5" type="number" name="reserve_price" placeholder="5" min="1"><br>
                         </div>
                     </div>
                     <div class="col-4 px-1">
@@ -80,7 +102,7 @@
                 <div class="fs-5">
                     <label class="form-label fw-semibold">Category</label><br>
                     <div class="dropdown mb-4">
-                        <select class="form-select fs-5">
+                        <select class="form-select fs-5" name="category">
                             <option selected class="text-secondary">Select a category</option>
                             {% for category in categories %}
                                 {% if category != "Root" %}
