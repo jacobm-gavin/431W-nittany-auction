@@ -266,6 +266,55 @@ def get_business_name(email):
     except mysql.connector.Error as err:
         print("Database error:", err)
         return None
+
+
+def get_full_profile(email):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost", user="root",
+            password=os.getenv("DB_PASSWORD"), database="nittanyauction"
+        )
+        cursor = conn.cursor(dictionary=True)
+
+        query = """SELECT u.email,
+                       b.first_name, \
+                       b.last_name, \
+                       b.age, \
+                       b.major,
+                       s.bank_routing_number, \
+                       s.bank_account_number,
+                       v.business_name, \
+                       v.customer_service_phone_number,
+                       a.street_num, \
+                       a.street_name, \
+                       a.zipcode,
+                       z.city, \
+                       z.state
+                FROM users u
+                         LEFT JOIN bidders b ON u.email = b.email
+                         LEFT JOIN sellers s ON u.email = s.email
+                         LEFT JOIN local_vendors v ON u.email = v.email
+                         LEFT JOIN address a ON (b.home_address_id = a.address_ID
+                    OR v.business_address_id = a.address_ID)
+                         LEFT JOIN zipcode_info z ON a.zipcode = z.zipcode
+                WHERE u.email = %s \
+                """
+        cursor.execute(query, (email,))
+        profile = cursor.fetchone()
+
+        if not profile:
+            return {'email': email, 'card': {}}
+
+        cursor.execute("SELECT * FROM credit_cards WHERE owner_email = %s LIMIT 1", (email,))
+        card_data = cursor.fetchone()
+        profile['card'] = card_data if card_data else {}
+
+        cursor.close()
+        conn.close()
+        return profile
+    except Exception as e:
+        print(f"CRITICAL ERROR: {e}")
+        return {'email': email, 'card': {}}
     
 # SQL INSERTS
 
@@ -656,6 +705,98 @@ def register():
 
         flash("Registration failed. Email might already exist.")
     return render_template("register.html")
+
+
+@app.route("/my_account", methods=["GET", "POST"])
+def my_account():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    email = session["user"].strip().lower()
+    role = session.get("role")
+
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        try:
+            conn = mysql.connector.connect(
+                host="localhost",
+                user="root",
+                password=os.getenv("DB_PASSWORD"),
+                database="nittanyauction"
+            )
+            cursor = conn.cursor(dictionary=True)
+
+            if action == "update_profile":
+                # Update Password
+                new_pw = request.form.get("password", "").strip()
+                if new_pw:
+                    hashed = hashlib.sha256(new_pw.encode()).hexdigest()
+                    cursor.execute("UPDATE Users SET password = %s WHERE email = %s", (hashed, email))
+
+                # Address and Zipcode
+                zip_c = request.form.get("zipcode", "").strip()
+                if zip_c:
+                    # Ensure Zip exists first (Parent table)
+                    cursor.execute("""
+                                   INSERT
+                                   IGNORE INTO Zipcode_Info (zipcode, city, state) 
+                        VALUES (%s, %s, %s) """, (zip_c, request.form.get("city"), request.form.get("state")))
+
+                    # Update Address (Child table)
+                    cursor.execute("""
+                                   UPDATE Address
+                                   SET zipcode = %s, street_num  = %s, street_name = %s WHERE address_ID = (SELECT home_address_id FROM Bidders WHERE email = %s)""", (zip_c, request.form.get("street_num"), request.form.get("street_name"), email))
+
+                # Update Personal Info
+                cursor.execute("""
+                               UPDATE Bidders
+                               SET first_name = %s,
+                                   last_name  = %s
+                               WHERE email = %s """, (request.form.get("first_name"), request.form.get("last_name"), email))
+
+                flash("Profile information updated successfully!")
+
+            elif action == "update_payment":
+                if role == "buyer":
+                    # Credit Card for Bidders
+                    cc_num = request.form.get("cc_num", "").strip()
+                    cursor.execute("""
+                                   REPLACE
+                                   INTO Credit_Cards (credit_card_num, card_type, expire_month, expire_year, security_code, Owner_email)
+                        VALUES (%s, %s, %s, %s, %s, %s) """, (cc_num, request.form.get("cc_type"), request.form.get("exp_m"), request.form.get("exp_y"), request.form.get("cvv"), email))
+                    flash("Payment card updated!")
+                else:
+                    # Banking for Sellers/Vendors
+                    routing = request.form.get("routing_num", "").strip()
+                    account = request.form.get("account_num", "").strip()
+                    cursor.execute("""UPDATE Sellers SET routing_num = %s, account_num = %s WHERE email = %s""", (routing, account, email))
+                    flash("Banking information updated!")
+
+            # Auto fill description for requesting email change
+            elif action == "request_email_change":
+                new_email_req = request.form.get("new_email_request")
+                request_id = random.randint(10000, 99999)
+                cursor.execute("""
+                               INSERT INTO Requests (request_id, sender_email, helpdesk_staff_email, request_type,
+                                                     request_desc, request_status)
+                               VALUES (%s, %s, 'helpdeskteam@lsu.edu', 'ChangeID', %s, 0)""", (request_id, email, f"Request to change email to: {new_email_req}"))
+                flash("Email change request submitted to HelpDesk.")
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+        except mysql.connector.Error as err:
+            print(f"Database Error: {err}")
+            flash("An error occurred while updating your information.")
+
+    current_data = get_full_profile(email)
+
+    # DEBUG print
+    #print(f"Template Data: {current_data}")
+
+    return render_template("my_account.html", user_info=current_data)
 
 if __name__ == "__main__":
     app.run(debug=True)

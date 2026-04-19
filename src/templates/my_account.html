@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Account - NittanyAuction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .view-mode input {
+            border: none;
+            background-color: transparent !important;
+            pointer-events: none;
+            padding-left: 0;
+            font-weight: 500;
+        }
+        .view-mode .btn-save, .view-mode .edit-indicator { display: none; }
+
+        .edit-mode .btn-edit { display: none; }
+        .edit-mode input { border: 1px solid #dee2e6; background-color: #fff !important; pointer-events: auto; }
+
+        .card-label { font-size: 0.75rem; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
+    </style>
+</head>
+<body class="bg-body-tertiary pb-5">
+
+    <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 px-4 border-bottom bg-primary text-white">
+        <a href="/{{ session['role'] }}" class="d-flex align-items-center col-md-3 mb-2 mb-md-0 text-white text-decoration-none">
+            <h4 class="fw-bold m-0">NittanyAuction</h4>
+        </a>
+        <div class="col-md-3 text-end">
+            <a href="/{{ session['role'] }}" class="btn btn-outline-light me-2 px-4 rounded-3">Back to Dashboard</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="fw-bold m-0">My Profile</h1>
+                    <button id="toggleEdit" class="btn btn-primary px-4 fw-bold btn-edit" onclick="enableEditing()">Edit Profile</button>
+                </div>
+
+                {% with messages = get_flashed_messages() %}
+                    {% for message in messages %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endwith %}
+
+                <form id="profileForm" method="POST" class="view-mode">
+                    <div class="card shadow-sm mb-4 border-0 rounded-4">
+                        <div class="card-body p-4">
+                            <input type="hidden" name="action" value="update_profile">
+
+                            <div class="mb-4">
+                                <label class="card-label">Email (User ID)</label>
+                                <p class="fs-5 fw-medium mb-0 text-primary">{{ user_info.email }}</p>
+                                <small class="text-muted">User ID cannot be changed directly.</small>
+                            </div>
+
+                            {% if user_info.business_name %}
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="card-label">Company Name</label>
+                                        <input type="text" name="business_name" class="form-control" value="{{ user_info.business_name or '' }}" placeholder="N/A">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="card-label">Customer Service Phone</label>
+                                        <input type="text" name="customer_service_phone_number" class="form-control" value="{{ user_info.customer_service_phone_number or '' }}" placeholder="N/A">
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="card-label">First Name</label>
+                                        <input type="text" name="first_name" class="form-control" value="{{ user_info.first_name or '' }}" placeholder="N/A">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="card-label">Last Name</label>
+                                        <input type="text" name="last_name" class="form-control" value="{{ user_info.last_name or '' }}" placeholder="N/A">
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <hr class="my-4">
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-3">
+                                    <label class="card-label">Street No.</label>
+                                    <input type="text" name="street_num" class="form-control" value="{{ user_info.street_num or '' }}">
+                                </div>
+                                <div class="col-md-9">
+                                    <label class="card-label">Street Name</label>
+                                    <input type="text" name="street_name" class="form-control" value="{{ user_info.street_name or '' }}">
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="card-label">Zipcode</label>
+                                    <input type="text" name="zipcode" class="form-control" value="{{ user_info.zipcode or '' }}">
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="card-label">City</label>
+                                    <input type="text" name="city" class="form-control" value="{{ user_info.city or '' }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="card-label">State</label>
+                                    <input type="text" name="state" class="form-control" value="{{ user_info.state or '' }}">
+                                </div>
+                            </div>
+
+                            <div class="edit-indicator mt-4">
+                                <label class="card-label text-primary">New Password</label>
+                                <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current">
+                            </div>
+
+                            <div class="mt-4 btn-save">
+                                <button type="submit" class="btn btn-success px-5 fw-bold">Save Profile Changes</button>
+                                <button type="button" class="btn btn-link text-muted" onclick="location.reload()">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <form id="paymentForm" method="POST" class="view-mode">
+                    <div class="card shadow-sm mb-4 border-0 rounded-4">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="m-0 fw-bold">
+                                {% if session['role'] == 'buyer' %}Payment Method{% else %}Banking Information{% endif %}
+                            </h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <input type="hidden" name="action" value="update_payment">
+
+                            {% if session['role'] == 'buyer' %}
+                                <div class="mb-3">
+                                    <label class="card-label">Card Number</label>
+                                    <input type="text" name="credit_card_num" class="form-control" value="{{ user_info.card.credit_card_num or '' }}" placeholder="None on file">
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6"><label class="card-label">Type</label><input type="text" name="card_type" class="form-control" value="{{ user_info.card.card_type or '' }}"></div>
+                                    <div class="col-2"><label class="card-label">Exp M</label><input type="text" name="expire_month" class="form-control" value="{{ user_info.card.expire_month or '' }}"></div>
+                                    <div class="col-2"><label class="card-label">Exp Y</label><input type="text" name="expire_year" class="form-control" value="{{ user_info.card.expire_year or '' }}"></div>
+                                    <div class="col-2"><label class="card-label">CVV</label><input type="text" name="security_code" class="form-control" value="{{ user_info.card.security_code or '' }}"></div>
+                                </div>
+                            {% else %}
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="card-label">Routing Number</label>
+                                        <input type="text" name="bank_routing_number" class="form-control" value="{{ user_info.bank_routing_number or '' }}" placeholder="Not Set">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="card-label">Account Number</label>
+                                        <input type="text" name="bank_account_number" class="form-control" value="{{ user_info.bank_account_number or '' }}" placeholder="Not Set">
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <div class="mt-4 btn-save">
+                                <button type="submit" class="btn btn-success px-5 fw-bold">Update Financials</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="card shadow-sm border-0 rounded-4 bg-dark text-white">
+                    <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold m-0">Update email</h6>
+                            <p class="small text-secondary m-0">Email changes require HelpDesk approval.</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-light" onclick="showEmailPrompt()">Submit Request</button>
+                    </div>
+                </div>
+
+                <form id="emailRequestForm" method="POST" style="display:none;">
+                    <input type="hidden" name="action" value="request_email_change">
+                    <input type="hidden" name="new_email_request" id="new_email_input">
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function enableEditing() {
+            document.querySelectorAll('form').forEach(f => {
+                f.classList.remove('view-mode');
+                f.classList.add('edit-mode');
+            });
+            document.getElementById('toggleEdit').style.display = 'none';
+        }
+
+        function showEmailPrompt() {
+            let newEmail = prompt("Enter the new email address you are requesting:");
+            if (newEmail) {
+                document.getElementById('new_email_input').value = newEmail;
+                document.getElementById('emailRequestForm').submit();
+            } else if (newEmail) {
+                alert("Please enter a valid email address.");
+            }
+        }
+    </script>
+</body>
+</html>
