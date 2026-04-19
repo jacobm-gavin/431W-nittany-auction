@@ -269,6 +269,62 @@ def get_business_name(email):
     
 # SQL INSERTS
 
+def insert_new_user(form_data):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+        cursor = conn.cursor()
+
+        # Retrieve user info from register.html
+        email = form_data.get("email")
+        password = hashlib.sha256(str(form_data.get("password")).encode()).hexdigest()
+        role = form_data.get("role")
+        zip_code = form_data.get("zipcode")
+        city = form_data.get("city")
+        state = form_data.get("state")
+
+        # Add a new zipcode for a new city, and ignore if zipcode for city/state already exists
+        cursor.execute("""INSERT IGNORE INTO Zipcode_Info (zipcode, city, state) VALUES (%s, %s, %s)""", (zip_code, city, state))
+
+        # Insert address w/ random addr id
+        import random
+        address_id = random.randint(10000, 99999)  # Increased range for uniqueness
+        cursor.execute("""INSERT INTO Address (address_ID, zipcode, street_num, street_name) VALUES (%s, %s, %s, %s)""", (address_id, zip_code, form_data.get("street_num"), form_data.get("street_name")))
+
+        # Insert user
+        cursor.execute("INSERT INTO Users (email, password) VALUES (%s, %s)", (email, password))
+
+        # Insert to specific role
+        if role == "buyer":
+            # Bidder
+            cursor.execute("""INSERT INTO Bidders (email, first_name, last_name, age, home_address_id, major) VALUES (%s, %s, %s, %s, %s, %s)""", (email, form_data.get("first_name"), form_data.get("last_name"), form_data.get("age"), address_id, form_data.get("major")))
+
+        elif role == "seller":
+            # Student Seller
+            cursor.execute("""INSERT INTO Bidders (email, first_name, last_name, age, home_address_id, major) VALUES (%s, %s, %s, %s, %s, %s)""", (email, form_data.get("first_name"), form_data.get("last_name"), form_data.get("age"), address_id, form_data.get("major")))
+
+            cursor.execute("""INSERT INTO Sellers (email, bank_routing_number, bank_account_number, balance) VALUES (%s, %s, %s, 0.0)""", (email, form_data.get("routing"), form_data.get("account")))
+
+        elif role == "vendor":
+            # Local Vendor
+            cursor.execute("""INSERT INTO Sellers (email, bank_routing_number, bank_account_number, balance) VALUES (%s, %s, %s, 0.0)""", (email, form_data.get("routing"), form_data.get("account")))
+
+            cursor.execute("""INSERT INTO Local_Vendors (Email, Business_Name, Business_Address_ID, Customer_Service_Phone_Number) VALUES (%s, %s, %s, %s)""", (email, form_data.get("business_name"), address_id, form_data.get("phone")))
+
+        conn.commit()
+        return True
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        conn.rollback()
+        return False
+    finally:
+        cursor.close()
+        conn.close()
+
 def insert_listing(seller_email, listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids):
     try:
         conn = mysql.connector.connect(
@@ -318,6 +374,8 @@ def update_listing(seller_email, listing_ID, category, auction_title, product_na
         return None
 
 # HELPER FUNCTIONS
+
+
 
 # Input - Retrieved bids on a listing from database
 # Output - Latest bid on that listing
@@ -563,6 +621,41 @@ def edit_item(seller_email, listing_ID):
         return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
     
     return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        # Attempt to insert the user into the DB
+        if insert_new_user(request.form):
+            # AUTO-LOGIN LOGIC START
+            email = request.form.get("email").strip()
+            role = request.form.get("role")
+
+            # Set session variables just like the /login route does
+            session["user"] = email
+            session["role"] = "buyer" if role == "buyer" else "seller"
+            session["seller_type"] = "none"
+
+            # Handle the specific vendor/student seller distinction
+            if role == "vendor":
+                session["seller_type"] = "vendor"
+                session["role"] = "seller"
+            elif role == "seller":
+                session["seller_type"] = "student"
+                session["role"] = "seller"
+
+            flash("Registration successful! Welcome to NittanyAuction.")
+
+            # Redirect to the appropriate dashboard immediately
+            if session["role"] == "buyer":
+                return redirect(url_for("buyer"))
+            else:
+                return redirect(url_for("seller"))
+            # AUTO-LOGIN LOGIC END
+
+        flash("Registration failed. Email might already exist.")
+    return render_template("register.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
