@@ -391,7 +391,30 @@ def insert_listing(seller_email, listing_ID, category, auction_title, product_na
         
         cursor.close()
         conn.close()
-        print("SUCCESSFULLY INSERTED")
+        print("SUCCESSFULLY INSERTED LISTING")
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+    
+def insert_listing_audit(seller_email, listing_ID, remaining_bids, removal_reason):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("INSERT INTO listing_audit VALUES (%s, %s, %s, %s)", (seller_email, listing_ID, remaining_bids, removal_reason))
+
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        print("SUCCESSFULLY INSERTED LISTING AUDIT")
     
     except mysql.connector.Error as err:
         print("Database error:", err)
@@ -416,15 +439,37 @@ def update_listing(seller_email, listing_ID, category, auction_title, product_na
         
         cursor.close()
         conn.close()
-        print("SUCCESSFULLY UPDATED")
+        print("SUCCESSFULLY UPDATED LISTING")
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+    
+# Makes a listing inactive
+def deactivate_listing(seller_email, listing_ID):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("UPDATE auction_listings SET status = 0 WHERE seller_email = %s AND listing_ID = %s", (seller_email, listing_ID))
+
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        print("SUCCESSFULLY DEACTIVATED LISTING")
     
     except mysql.connector.Error as err:
         print("Database error:", err)
         return None
 
 # HELPER FUNCTIONS
-
-
 
 # Input - Retrieved bids on a listing from database
 # Output - Latest bid on that listing
@@ -594,7 +639,6 @@ def auction_listing(seller_email, listing_ID):
     listing = get_listing(seller_email, listing_ID)
     bids = get_bids(listing_ID)
     numbids = len(bids)
-    # print(session["user"])
 
     # find latest/current bid just by maximum bid_price
     latestbid = get_latest_bid(bids)
@@ -671,6 +715,30 @@ def edit_item(seller_email, listing_ID):
     
     return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
 
+@app.route("/remove_item/<string:seller_email>/<int:listing_ID>", methods=["GET", "POST"])
+def remove_item(seller_email, listing_ID):
+    if "user" not in session and session["role"] != "seller":
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        removal_reason = request.form.get("removal_reason", "").strip()
+
+        if removal_reason is "":
+            flash("Please provide a reason.")
+            return render_template("remove_item.html")
+        
+        listing = get_listing(seller_email, listing_ID)
+        bids = get_bids(listing_ID)
+        numbids = len(bids)
+        remaining_bids = listing["max_bids"] - numbids
+
+        deactivate_listing(seller_email, listing_ID)
+        insert_listing_audit(seller_email, listing_ID, remaining_bids, removal_reason)
+
+        flash("Item successfully removed!")
+        return render_template("remove_item.html")
+    
+    return render_template("remove_item.html")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():

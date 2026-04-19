@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ listing.product_name }}</title>
+    <title>{{ listing.product_name }} - Nittany Auction</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body class="bg-body-tertiary justify-content-center">
@@ -36,9 +36,12 @@
     <div class="d-flex justify-content-center mb-4">
         <div class="d-flex mx-5 justify-content-between align-items-start gap-4" style="width: 75vw;">
             <button onclick="history.back()" class="btn btn-outline-primary px-4">Back</button>
-            {% if listing.seller_email == user and numbids == 0 %}
-                <a href="/edit_item/{{ listing.seller_email }}/{{ listing.listing_ID }}" class="btn btn-primary px-4">Edit</a>
-            {% endif %}
+            <div>
+                {% if listing.seller_email == user and numbids == 0 and listing.status == 1%}
+                    <a href="/edit_item/{{ listing.seller_email }}/{{ listing.listing_ID }}" class="btn btn-primary px-4 mx-2">Edit</a>
+                    <a href="/remove_item/{{ listing.seller_email }}/{{ listing.listing_ID }}" class="btn btn-outline-primary px-4">Remove</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -47,8 +50,11 @@
             <div id="auction-info" class="card p-4 rounded-4 border w-100">
                 <h1>{{ listing.auction_title }}</h1>
                 <p class="card-text fw-light fs-5">{{ listing.category }}</p>
-                {% if numbids >= listing.max_bids %}
-                <span class="badge text-bg-primary col-1 py-2 mb-3">Sold</span>
+                {% if listing.status == 2 %}
+                <span class="badge rounded-pill text-bg-primary col-2 py-2 mb-3">Sold</span>
+                {% endif %}
+                {% if listing.status == 0 %}
+                <span class="badge rounded-pill text-bg-secondary col-2 py-2 mb-3">Inactive</span>
                 {% endif %}
                 <div class="fw-bold fs-5 card-text">Current Bid</div>
                 {% if latestbid %}

@@ -126,3 +126,12 @@ CREATE TABLE IF NOT EXISTS Rating (
     FOREIGN KEY (bidder_email) REFERENCES Bidders(email),
     FOREIGN KEY (seller_email) REFERENCES Sellers(email)
 );
+
+CREATE TABLE IF NOT EXISTS Listing_Audit (
+    seller_email VARCHAR(255) NOT NULL,
+    listing_ID INTEGER NOT NULL,
+    remaining_bids INTEGER NOT NULL,
+    removal_reason VARCHAR(255) NOT NULL,
+    PRIMARY KEY (seller_email, listing_ID),
+    FOREIGN KEY (seller_email, listing_ID) REFERENCES Auction_Listings(seller_email, listing_ID)
+)
