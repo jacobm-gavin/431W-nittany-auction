@@ -316,6 +316,34 @@ def get_full_profile(email):
         print(f"CRITICAL ERROR: {e}")
         return {'email': email, 'card': {}}
     
+def get_ratings(seller_email):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM rating WHERE seller_email = %s", (seller_email,))
+        ratings = cursor.fetchall()
+
+        if ratings is None:
+            cursor.close()
+            conn.close()
+            return None
+
+        cursor.close()
+        conn.close()
+
+        return ratings
+
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+
 # SQL INSERTS
 
 def insert_new_user(form_data):
@@ -686,6 +714,14 @@ def auction_listing(seller_email, listing_ID):
     listing = get_listing(seller_email, listing_ID)
     bids = get_bids(listing_ID)
     numbids = len(bids)
+    rating_data = get_ratings(seller_email)
+    ratings = []
+    for rating in rating_data:
+        ratings.append(float(rating["rating"]))
+
+    print(ratings)
+
+    avg_rating = sum(ratings) / len(ratings)
 
     # find latest/current bid just by maximum bid_price
     latestbid = get_latest_bid(bids)
@@ -697,16 +733,16 @@ def auction_listing(seller_email, listing_ID):
 
         if not new_bid:
             flash("Please enter a price.")
-            return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
+            return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid, avg_rating=avg_rating)
         
         if latestbid is not None: 
             if session["user"] == latestbid["bidder_email"]:
                 flash("You cannot place consecutive bids.")
-                return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
+                return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid, avg_rating=avg_rating)
             
             if int(new_bid) <= latestbid["bid_price"]:
                 flash("Bid must be higher than current bid.")
-                return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
+                return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid, avg_rating=avg_rating)
         
         insert_bid(seller_email, listing_ID, session["user"], new_bid)
 
@@ -716,11 +752,11 @@ def auction_listing(seller_email, listing_ID):
         listing = get_listing(seller_email, listing_ID)
         bids = get_bids(listing_ID)
         numbids = len(bids)
-        
+
         return redirect(f"/auction_listing/{seller_email}/{listing_ID}")
         # return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
 
-    return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
+    return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid, avg_rating=avg_rating)
 
 @app.route("/sell_item", methods=["GET", "POST"])
 def sell_item():
