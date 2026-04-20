@@ -6,64 +6,84 @@
 </head>
 <body class="d-flex flex-column py-4 justify-content-center" style="min-height: 100vh;">
 
-<form method="POST" class="p-4">
-    <h3 class="mb-3">Account Basics</h3>
-    <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
-    <input type="password" name="password" class="form-control mb-2" placeholder="Password" required>
-
-    <select name="role" id="roleSelect" class="form-select mb-3" onchange="toggleFields()">
-        <option value="buyer">Bidder (Student)</option>
-        <option value="seller">Seller (Student)</option>
-        <option value="vendor">Local Vendor (Business)</option>
-    </select>
-
-    <div id="personalInfo">
-        <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name">
-        <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name">
-        <input type="number" name="age" class="form-control mb-2" placeholder="Age">
-        <input type="text" name="major" class="form-control mb-2" placeholder="Major">
-    </div>
-
-    <div id="vendorInfo" style="display:none;">
-        <input type="text" name="business_name" class="form-control mb-2" placeholder="Business Name">
-        <input type="text" name="phone" class="form-control mb-2" placeholder="Customer Service Phone">
-    </div>
-
-    <div id="sellerInfo" style="display:none;">
-        <input type="text" name="routing" class="form-control mb-2" placeholder="Bank Routing Number">
-        <input type="text" name="account" class="form-control mb-2" placeholder="Bank Account Number">
-    </div>
-
-    <h3 class="mt-4 mb-3 fw-semibold">Address Information</h3>
-
-<div class="row g-2 mb-2">
-    <div class="col-md-3">
-        <label class="form-label small fw-bold">Street No.</label>
-        <input type="text" name="street_num" class="form-control" placeholder="123" required>
-    </div>
-    <div class="col-md-9">
-        <label class="form-label small fw-bold">Street Name</label>
-        <input type="text" name="street_name" class="form-control" placeholder="Main St" required>
-    </div>
+<div class="d-flex justify-content-center pt-3 col-lg-3 m-auto">
+    <h1 class="fw-bold">Register</h1>
 </div>
+<div class="justify-content-center py-3 bg-body-tertiary col-lg-4 px-5 m-auto border rounded-5">
+    <form method="POST" class="p-4"class="form-signin w-100 m-auto py-3 px-5">
+        <h3 class="fw-semibold mb-3">Account Basics</h3>
+        <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
+        <input type="password" name="password" class="form-control mb-2" placeholder="Password" required>
 
-<div class="row g-2 mb-3">
-    <div class="col-md-4">
-        <label class="form-label small fw-bold">Zipcode</label>
-        <input type="text" name="zipcode" class="form-control" placeholder="16801" required>
+        <select name="role" id="roleSelect" class="form-select mb-2" onchange="toggleFields()">
+            <option value="buyer">Bidder (Student)</option>
+            <option value="seller">Seller (Student)</option>
+            <option value="vendor">Local Vendor (Business)</option>
+        </select>
+        <br>
+
+        <div id="personalInfo">
+            <div class="d-flex">
+                <div class="col-6 pe-2">
+                    <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name">
+                </div>
+                <div class="col-6">
+                    <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name">
+                </div>
+            </div>
+            <div class="d-flex">
+                <div class="col-9 pe-2">
+                    <input type="text" name="major" class="form-control mb-2" placeholder="Major">
+                </div>
+                <div class="col-3">
+                    <input type="number" name="age" class="form-control mb-2" placeholder="Age">
+                </div>
+            </div>
+            <!-- <input type="number" name="age" class="form-control mb-2" placeholder="Age">
+            <input type="text" name="major" class="form-control mb-2" placeholder="Major"> -->
+        </div>
+
+        <div id="vendorInfo" style="display:none;">
+            <input type="text" name="business_name" class="form-control mb-2" placeholder="Business Name">
+            <input type="text" name="phone" class="form-control mb-2" placeholder="Customer Service Phone">
+        </div>
+
+        <div id="sellerInfo" style="display:none;">
+            <input type="text" name="routing" class="form-control mb-2" placeholder="Bank Routing Number">
+            <input type="text" name="account" class="form-control mb-2" placeholder="Bank Account Number">
+        </div>
+
+        <h3 class="mt-4 mb-3 fw-semibold">Address Information</h3>
+
+    <div class="row g-2 mb-2">
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold">Street No.</label>
+            <input type="text" name="street_num" class="form-control" placeholder="123" required>
+        </div>
+        <div class="col-md-9">
+            <label class="form-label small fw-semibold">Street Name</label>
+            <input type="text" name="street_name" class="form-control" placeholder="Main St" required>
+        </div>
     </div>
-    <div class="col-md-5">
-        <label class="form-label small fw-bold">City</label>
-        <input type="text" name="city" class="form-control" placeholder="State College" required>
+
+    <div class="row g-2 mb-3">
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold">Zipcode</label>
+            <input type="text" name="zipcode" class="form-control" placeholder="16801" required>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label small fw-semibold">City</label>
+            <input type="text" name="city" class="form-control" placeholder="State College" required>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold">State</label>
+            <input type="text" name="state" class="form-control" placeholder="PA" maxlength="2" required>
+        </div>
     </div>
-    <div class="col-md-3">
-        <label class="form-label small fw-bold">State</label>
-        <input type="text" name="state" class="form-control" placeholder="PA" maxlength="2" required>
-    </div>
+
+        <button type="submit" class="btn btn-primary w-100 mt-4 fw-semibold py-2">Register</button>
+    </form>
 </div>
-
-    <button type="submit" class="btn btn-success w-100 mt-4">Register</button>
-</form>
 
 <!-- Toggle the login fields depending on what account is being created-->
 <script>
