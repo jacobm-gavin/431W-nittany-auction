@@ -719,9 +719,12 @@ def auction_listing(seller_email, listing_ID):
     for rating in rating_data:
         ratings.append(float(rating["rating"]))
 
-    print(ratings)
+    # print(ratings)
 
-    avg_rating = sum(ratings) / len(ratings)
+    if ratings:
+        avg_rating = sum(ratings) / len(ratings)
+    else:
+        avg_rating = None
 
     # find latest/current bid just by maximum bid_price
     latestbid = get_latest_bid(bids)
@@ -791,7 +794,10 @@ def sell_item():
         for listing in seller_listings:
             listing_IDs.append(listing["listing_ID"])
 
-        new_listing_ID = max(listing_IDs) + 1 # creating new listing_ID
+        if listing_IDs:
+            new_listing_ID = max(listing_IDs) + 1 # creating new listing_ID
+        else:
+            new_listing_ID = 1
         insert_listing(session["user"], new_listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids)
 
         flash("Item successfully added!")
