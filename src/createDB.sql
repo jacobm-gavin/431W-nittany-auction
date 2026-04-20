@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS Auction_Listings (
 );
 
 CREATE TABLE IF NOT EXISTS Bids (
-    bid_ID INT PRIMARY KEY,
+    bid_ID INT PRIMARY KEY AUTO_INCREMENT,
     seller_email VARCHAR(255) NOT NULL,
     listing_ID INT NOT NULL,
     bidder_email VARCHAR(255) NOT NULL,

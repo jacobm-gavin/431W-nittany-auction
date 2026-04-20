@@ -419,6 +419,29 @@ def insert_listing_audit(seller_email, listing_ID, remaining_bids, removal_reaso
     except mysql.connector.Error as err:
         print("Database error:", err)
         return None
+    
+def insert_bid(seller_email, listing_ID, bidder_email, bid_price):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("INSERT INTO bids (seller_email, listing_ID, bidder_email, bid_price) VALUES (%s, %s, %s, %s)", (seller_email, listing_ID, bidder_email, bid_price,))
+
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        print("SUCCESSFULLY INSERTED BID")
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
 
 # SQL UPDATES
 
@@ -464,6 +487,30 @@ def deactivate_listing(seller_email, listing_ID):
         cursor.close()
         conn.close()
         print("SUCCESSFULLY DEACTIVATED LISTING")
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+    
+# Makes a listing sold (status = 2)
+def sell_listing(seller_email, listing_ID):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("UPDATE auction_listings SET status = 2 WHERE seller_email = %s AND listing_ID = %s", (seller_email, listing_ID))
+
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        print("SUCCESSFULLY SOLD LISTING")
     
     except mysql.connector.Error as err:
         print("Database error:", err)
@@ -631,7 +678,7 @@ def logout():
     flash("You have been logged out.")
     return redirect(url_for("login"))
 
-@app.route("/auction_listing/<string:seller_email>/<int:listing_ID>")
+@app.route("/auction_listing/<string:seller_email>/<int:listing_ID>", methods=["GET", "POST"])
 def auction_listing(seller_email, listing_ID):
     if "user" not in session:
         return redirect(url_for("login"))
@@ -642,7 +689,37 @@ def auction_listing(seller_email, listing_ID):
 
     # find latest/current bid just by maximum bid_price
     latestbid = get_latest_bid(bids)
+
+    if request.method == "POST":
+        new_bid = request.form.get("new_bid", "").strip()
+
+        # print(session["user"], latestbid["bidder_email"])
+
+        if not new_bid:
+            flash("Please enter a price.")
+            return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
         
+        if latestbid is not None: 
+            if session["user"] == latestbid["bidder_email"]:
+                flash("You cannot place consecutive bids.")
+                return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
+            
+            if int(new_bid) <= latestbid["bid_price"]:
+                flash("Bid must be higher than current bid.")
+                return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
+        
+        insert_bid(seller_email, listing_ID, session["user"], new_bid)
+
+        if numbids + 1 >= listing["max_bids"]:
+            sell_listing(seller_email, listing_ID)
+
+        listing = get_listing(seller_email, listing_ID)
+        bids = get_bids(listing_ID)
+        numbids = len(bids)
+        
+        return redirect(f"/auction_listing/{seller_email}/{listing_ID}")
+        # return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
+
     return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
 
 @app.route("/sell_item", methods=["GET", "POST"])

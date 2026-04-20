@@ -66,8 +66,27 @@
                 <p class="card-text fs-3 fw-medium text-primary">${{ listing.reserve_price }}</p>
                 <div class="fw-bold fs-5 card-text">Bids</div>
                 <p class="card-text fs-5 fw-light">{{ numbids }} out of {{ listing.max_bids }}</p>
-                <!-- <div class="fw-bold fs-5 card-text">Max Bids</div>
-                <p class="card-text fs-5 fw-light">{{ listing.max_bids }}</p> -->
+                
+                {% if listing.status == 1 %}
+                    <hr>
+                    <div class="fw-bold fs-5 card-text mb-2">Your Bid</div>
+                    <form method="POST">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text fs-5">$</span>
+                            <input class="form-control fw-light fs-5" type="number" name="new_bid" placeholder="1" min="1"><br>
+                        </div>
+                        <button type="submit" class="btn btn-primary px-4">Place Bid</button>
+                    </form>
+                    <div>
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                    <div class="alert alert-primary m-auto mt-3" role="alert">
+                                        <p class="text-center mb-0">{{ messages[0] }}</p>
+                                    </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                {% endif %}
             </div>
             <div id="product-info" class="card p-4 rounded-4 border w-100">
                 <div class="fw-bold fs-5 card-text">Product Name</div>
