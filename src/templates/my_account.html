@@ -41,7 +41,7 @@
 
                 {% with messages = get_flashed_messages() %}
                     {% for message in messages %}
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div class="alert alert-primary alert-dismissible fade show" role="alert">
                             {{ message }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
@@ -86,11 +86,11 @@
                             <hr class="my-4">
 
                             <div class="row g-3 mb-3">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <label class="card-label">Street No.</label>
                                     <input type="text" name="street_num" class="form-control" value="{{ user_info.street_num or '' }}">
                                 </div>
-                                <div class="col-md-9">
+                                <div class="col-md-8">
                                     <label class="card-label">Street Name</label>
                                     <input type="text" name="street_name" class="form-control" value="{{ user_info.street_name or '' }}">
                                 </div>
@@ -117,7 +117,7 @@
                             </div>
 
                             <div class="mt-4 btn-save">
-                                <button type="submit" class="btn btn-success px-5 fw-bold">Save Profile Changes</button>
+                                <button type="submit" class="btn btn-primary px-5 fw-bold">Save Profile Changes</button>
                                 <button type="button" class="btn btn-link text-muted" onclick="location.reload()">Cancel</button>
                             </div>
                         </div>
@@ -159,19 +159,19 @@
                             {% endif %}
 
                             <div class="mt-4 btn-save">
-                                <button type="submit" class="btn btn-success px-5 fw-bold">Update Financials</button>
+                                <button type="submit" class="btn btn-primary px-5 fw-bold">Update Financials</button>
                             </div>
                         </div>
                     </div>
                 </form>
 
-                <div class="card shadow-sm border-0 rounded-4 bg-dark text-white">
+                <div class="card shadow-sm border-0 rounded-4">
                     <div class="card-body p-4 d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="fw-bold m-0">Update email</h6>
                             <p class="small text-secondary m-0">Email changes require HelpDesk approval.</p>
                         </div>
-                        <button class="btn btn-sm btn-outline-light" onclick="showEmailPrompt()">Submit Request</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showEmailPrompt()">Submit Request</button>
                     </div>
                 </div>
 
@@ -203,5 +203,6 @@
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>

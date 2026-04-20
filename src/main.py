@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import hashlib
 import mysql.connector
 from dotenv import load_dotenv
+import random
 
 app = Flask(__name__)
 app.secret_key = "secret_key"
