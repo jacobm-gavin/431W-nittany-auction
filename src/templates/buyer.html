@@ -30,13 +30,13 @@
 
         <div class="col-md-3 text-end d-flex align-items-center justify-content-end">
             {% if role == "seller" %}
-                <a href="/sell_item" class="btn btn-light me-2 text-primary px-4 rounded-3 fw-bold">Sell Item</a>
+                <a href="/sell_item" class="btn btn-light me-2 text-primary px-4 rounded-3">Sell Item</a>
                 <a href="/seller" class="btn btn-outline-light me-2 px-4 rounded-3">Dashboard</a>
             {% endif %}
             <a href="/my_account" class="btn btn-outline-light me-2 px-4 rounded-3">My Account</a>
-            <a href="/logout" class="text-white">
-                <svg width="28px" height="28px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M15 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8m4-9-4-4m4 4-4 4m4-4H9" stroke-linecap="round" stroke-linejoin="round"/>
+            <a href="/logout">
+                <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 16.5V19C15 20.1046 14.1046 21 13 21H6C4.89543 21 4 20.1046 4 19V5C4 3.89543 4.89543 3 6 3H13C14.1046 3 15 3.89543 15 5V8.0625M11 12H21M21 12L18.5 9.5M21 12L18.5 14.5" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </a>
         </div>
@@ -77,45 +77,46 @@
                     </div>
                 </div>
 
-                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                
                     {% if listings %}
-                        {% for listing in listings %}
-                        <div class="col">
-                            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-                                <div class="card-body p-4 d-flex flex-column">
-                                    <div class="mb-auto">
-                                        <h5 class="fw-bold text-dark">{{ listing.auction_title }}</h5>
-                                        <p class="text-muted small mb-3">{{ listing.product_description | truncate(100) }}</p>
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                            {% for listing in listings %}
+                            <div class="col">
+                                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                                    <div class="card-body p-4 d-flex flex-column">
+                                        <div class="mb-auto">
+                                            <h5 class="fw-bold text-dark">{{ listing.auction_title }}</h5>
+                                            <p class="text-muted small mb-3">{{ listing.product_description | truncate(100) }}</p>
 
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <span class="text-secondary small">Reserve Price</span>
-                                            <span class="fw-bold text-primary">${{ listing.reserve_price }}</span>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="text-secondary small">Reserve Price</span>
+                                                <span class="fw-bold text-primary">${{ listing.reserve_price }}</span>
+                                            </div>
+
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="text-secondary small">Seller</span>
+                                                <span class="small">{{ listing.seller_email }}</span>
+                                            </div>
                                         </div>
 
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <span class="text-secondary small">Seller</span>
-                                            <span class="small">{{ listing.seller_email }}</span>
+                                        <hr class="my-3">
+
+                                        <div class="d-grid">
+                                            <a href="/auction_listing/{{ listing.seller_email }}/{{ listing.listing_ID }}"
+                                            class="btn btn-primary rounded-3 fw-bold">View Listing</a>
                                         </div>
-                                    </div>
-
-                                    <hr class="my-3">
-
-                                    <div class="d-grid">
-                                        <a href="/auction_listing/{{ listing.seller_email }}/{{ listing.listing_ID }}"
-                                           class="btn btn-primary rounded-3 fw-bold">View Listing</a>
                                     </div>
                                 </div>
                             </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
                     {% else %}
-                        <div class="col-12 text-center py-5">
+                        <div class="col-12 pb-5 pt-2">
                             <h3 class="text-muted fw-light">No items matching your search were found.</h3>
                             <!-- Reset filters to display the original listings -->
-                            <a href="/buyer" class="btn btn-link">Clear all filters</a>
+                            <a href="/buyer" class="">Clear all filters</a>
                         </div>
                     {% endif %}
-                </div>
             </div>
         </div>
     </div>

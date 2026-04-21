@@ -21,12 +21,17 @@
 </head>
 <body class="bg-body-tertiary pb-5">
 
-    <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 px-4 border-bottom bg-primary text-white">
+    <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-4 mb-4 px-4 border-bottom bg-primary text-white">
         <a href="/{{ session['role'] }}" class="d-flex align-items-center col-md-3 mb-2 mb-md-0 text-white text-decoration-none">
             <h4 class="fw-bold m-0">NittanyAuction</h4>
         </a>
         <div class="col-md-3 text-end">
             <a href="/{{ session['role'] }}" class="btn btn-outline-light me-2 px-4 rounded-3">Back to Dashboard</a>
+            <a href="/logout">
+                <svg width="32px" height="32px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 16.5V19C15 20.1046 14.1046 21 13 21H6C4.89543 21 4 20.1046 4 19V5C4 3.89543 4.89543 3 6 3H13C14.1046 3 15 3.89543 15 5V8.0625M11 12H21M21 12L18.5 9.5M21 12L18.5 14.5" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
         </div>
     </header>
 

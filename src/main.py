@@ -753,6 +753,7 @@ def auction_listing(seller_email, listing_ID):
         bids = get_bids(listing_ID)
         numbids = len(bids)
 
+        flash("Bid successfully placed!")
         return redirect(f"/auction_listing/{seller_email}/{listing_ID}")
         # return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid)
 
@@ -794,8 +795,8 @@ def sell_item():
         new_listing_ID = max(listing_IDs) + 1 # creating new listing_ID
         insert_listing(session["user"], new_listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids)
 
-        flash("Item successfully added!")
-        return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
+        # flash("Item successfully added!")
+        return redirect(url_for("seller"))
     
     return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
 
@@ -824,7 +825,7 @@ def edit_item(seller_email, listing_ID):
         listing = get_listing(seller_email, listing_ID)
 
         flash("Item successfully updated!")
-        return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
+        return redirect(f"/auction_listing/{seller_email}/{listing_ID}")
     
     return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
 
@@ -978,6 +979,73 @@ def my_account():
     #print(f"Template Data: {current_data}")
 
     return render_template("my_account.html", user_info=current_data)
+
+
+@app.route("/search")
+def search():
+    query_param = request.args.get('q', '').strip()
+    min_p = request.args.get('min_p')
+    max_p = request.args.get('max_p')
+
+    try:
+        conn = mysql.connector.connect(
+            host="localhost", user="root",
+            password=os.getenv("DB_PASSWORD"), database="nittanyauction"
+        )
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT category_name, parent_category FROM categories")
+        rows = cursor.fetchall()
+        categories_dict = {}
+        for row in rows:
+            parent = row['parent_category'] or "Root"
+            if parent not in categories_dict:
+                categories_dict[parent] = []
+            categories_dict[parent].append(row['category_name'])
+
+        # Statement to search specific listings
+        search_sql = """
+                     SELECT * \
+                     FROM auction_listings
+                     WHERE (product_name LIKE %s OR product_description LIKE %s
+                         OR category LIKE %s OR auction_title LIKE %s OR seller_email LIKE %s)
+                       AND status = 1 \
+                     """
+        search_val = f"%{query_param}%"
+        # Use user value to search in name, description, category, title, or seller
+        params = [search_val, search_val, search_val, search_val, search_val]
+
+        # Set min and max prices if given
+        if min_p:
+            search_sql += " AND reserve_price >= %s"
+            params.append(min_p)
+        if max_p:
+            search_sql += " AND reserve_price <= %s"
+            params.append(max_p)
+
+        cursor.execute(search_sql, tuple(params))
+        results = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        email = session["user"]
+        name = get_first_name(email)
+        if name == None:
+            name = get_business_name(email)
+
+        # Render with filtered listings
+        return render_template("buyer.html",
+                               listings=results,
+                               categories=categories_dict,
+                               name=name,
+                               user=session.get('user'),
+                               role=session.get('role'),
+                               category=f"Search Results: {query_param}")
+
+    except Exception as e:
+        print(f"Search Error: {e}")
+        return redirect(url_for('buyer'))
 
 if __name__ == "__main__":
     app.run(debug=True)
