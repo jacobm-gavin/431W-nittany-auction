@@ -48,7 +48,9 @@
             <div class="col-6">
                 {% with messages = get_flashed_messages() %}
                     {% if messages %}
-                        {% if messages[0] == "Item successfully updated!" or messages[0] == "Bid successfully placed!" %}
+                        {% if messages[0] == "Item successfully updated!"
+                           or messages[0] == "Bid placed successfully."
+                           or messages[0] == "Seller rating submitted successfully." %}
                             <div class="alert alert-primary m-auto mt-3" role="alert">
                                 <p class="text-center mb-0">{{ messages[0] }}</p>
                             </div>
@@ -90,11 +92,12 @@
                 <p class="card-text fs-3 fw-medium text-primary">${{ listing.reserve_price }}</p>
                 <div class="fw-bold fs-5 card-text">Bids</div>
                 <p class="card-text fs-5 fw-light">{{ numbids }} out of {{ listing.max_bids }}</p>
-                
+
                 {% if listing.status == 1 and seller_type != "vendor" %}
                     <hr>
                     <div class="fw-bold fs-5 card-text mb-2">Your Bid</div>
                     <form method="POST">
+                        <input type="hidden" name="action" value="place_bid">
                         <div class="input-group mb-3">
                             <span class="input-group-text fs-5">$</span>
                             <input class="form-control fw-light fs-5" type="number" name="new_bid" placeholder="1" min="1"><br>
@@ -113,10 +116,42 @@
                 <hr>
                 <div class="fw-bold fs-5 card-text">Seller</div>
                 <span class="card-text fs-5 fw-light mb-1">{{ listing.seller_email }}</span>
+
                 {% if avg_rating %}
-                    <span class="card-text fs-5">★ {{ avg_rating }}/5.0</span>
+                    <div class="card-text fs-5 mb-3">★ {{ avg_rating }}/5.0</div>
                 {% else %}
-                    <span class="card-text fs-5">★ This seller has no reviews yet.</span>
+                    <div class="card-text fs-5 mb-3">★ This seller has no reviews yet.</div>
+                {% endif %}
+
+                {% if listing.status == 2 and can_rate and not already_rated %}
+                    <hr>
+                    <div class="fw-bold fs-5 card-text mb-2">Rate This Seller</div>
+                    <p class="card-text fw-light fs-6 text-secondary mb-3">
+                        Your transaction is complete. Please rate your experience with this seller.
+                    </p>
+
+                    <form method="POST">
+                        <input type="hidden" name="action" value="submit_rating">
+
+                        <div class="fs-5 mb-3">
+                            <label class="form-label fw-semibold">Seller Rating</label>
+                            <select class="form-select fw-light fs-5" name="rating_value" required>
+                                <option value="" selected>Select a rating</option>
+                                <option value="1">1 - Poor</option>
+                                <option value="2">2 - Fair</option>
+                                <option value="3">3 - Good</option>
+                                <option value="4">4 - Very Good</option>
+                                <option value="5">5 - Excellent</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary px-4">Submit Rating</button>
+                    </form>
+                {% elif listing.status == 2 and already_rated %}
+                    <hr>
+                    <div class="alert alert-primary mt-3 mb-0" role="alert">
+                        <p class="mb-0">You have already rated this seller.</p>
+                    </div>
                 {% endif %}
             </div>
         </div>

@@ -31,7 +31,7 @@ def get_user(email):
             conn.close()
             return None
 
-        # determine role from other tables
+        # Determine role from other tables
         role = None
 
         cursor.execute("SELECT * FROM bidders WHERE email = %s", (email,))
@@ -279,6 +279,7 @@ def insert_transaction(transaction_ID, seller_email, listing_ID, buyer_email, da
         print("Database error:", err)
         return False
 
+#Used for check when paying to ensure transaction doesnt exist
 def transaction_exists(seller_email, listing_ID):
     try:
         conn = mysql.connector.connect(
@@ -670,6 +671,76 @@ def sell_listing(seller_email, listing_ID):
 
 # HELPER FUNCTIONS
 
+#ensures buyer completed the purchase
+def get_transaction_for_buyer_listing(seller_email, listing_ID, buyer_email):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM transactions WHERE seller_email = %s AND listing_ID = %s AND buyer_email = %s LIMIT 1", (seller_email, listing_ID, buyer_email))
+
+        tran = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return tran
+
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+
+#check to see if buyer already rated seller
+def get_existing_rating(bidder_email, seller_email):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM rating WHERE bidder_email = %s AND seller_email = %s LIMIT 1",(bidder_email, seller_email))
+
+        existing = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return existing
+
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+
+#insert rating into DB
+def insert_rating(bidder_email, seller_email, rating_value, rating_desc):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+        cursor = conn.cursor()
+
+        date = "2026-04-21"
+
+        cursor.execute(
+            "INSERT INTO rating (bidder_email, seller_email, date, rating, rating_desc) VALUES (%s, %s, %s, %s, %s)",
+            (bidder_email, seller_email, date, rating_value, rating_desc)
+        )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return False
 # Input - Retrieved bids on a listing from database
 # Output - Latest bid on that listing
 def get_latest_bid(bids):
@@ -785,11 +856,11 @@ def payment(seller_email, listing_ID):
         return redirect(url_for("login"))
 
     buyer_email = session["user"]
-
+    #ensure user is a buyer
     if session.get("role") != "buyer":
         flash("Only buyers can complete payments.")
         return redirect(url_for("login"))
-
+    #ensure listing is loaded
     listing = get_listing(seller_email, listing_ID)
     if listing is None:
         flash("Listing not found.")
@@ -798,18 +869,22 @@ def payment(seller_email, listing_ID):
     bids = get_bids(listing_ID)
     latestbid = get_latest_bid(bids)
 
+    #check to see if listing has bids
     if latestbid is None:
         flash("No winning bid is present for this listing.")
         return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
 
+    #ensure listing eached max bids before declaring winner
     if len(bids) < listing["max_bids"]:
         flash("This auction is not over yet.")
         return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
 
+    #ensure reserve price met
     if latestbid["bid_price"] < listing["reserve_price"]:
         flash("Reserve price not met.")
         return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
 
+    #ensure bidder that is paying was the one who won the auction
     if buyer_email != latestbid["bidder_email"]:
         flash("You are not authorized to pay for this listing.")
         return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
@@ -824,12 +899,14 @@ def payment(seller_email, listing_ID):
     if request.method == "POST":
         selected_card_num = request.form.get("selected_card_num", "").strip()
 
+        #inputted credit card
         credit_card_num = request.form.get("credit_card_num", "").strip()
         card_type = request.form.get("card_type", "").strip()
         expire_month = request.form.get("expire_month", "").strip()
         expire_year = request.form.get("expire_year", "").strip()
         security_code = request.form.get("security_code", "").strip()
 
+        #option to pay with card already on file
         if selected_card_num:
             chosen_card = get_specific_card(buyer_email, selected_card_num)
 
@@ -837,17 +914,10 @@ def payment(seller_email, listing_ID):
                 flash("Selected saved card was not found.")
                 return render_template("payment.html",user=buyer_email,role=session["role"],listing=listing,latestbid=latestbid,saved_cards=saved_cards,amount_due=amount_due)
         else:
+            #ensure inputted card has all fields
             if not credit_card_num or not card_type or not expire_month or not expire_year or not security_code:
                 flash("Please either choose a saved card or enter a complete new card.")
-                return render_template(
-                    "payment.html",
-                    user=buyer_email,
-                    role=session["role"],
-                    listing=listing,
-                    latestbid=latestbid,
-                    saved_cards=saved_cards,
-                    amount_due=amount_due
-                )
+                return render_template("payment.html",user=buyer_email,role=session["role"],listing=listing,latestbid=latestbid,saved_cards=saved_cards,amount_due=amount_due)
 
             try:
                 conn = mysql.connector.connect(
@@ -879,15 +949,7 @@ def payment(seller_email, listing_ID):
             except mysql.connector.Error as err:
                 print("Database error:", err)
                 flash("Could not save payment information.")
-                return render_template(
-                    "payment.html",
-                    user=buyer_email,
-                    role=session["role"],
-                    listing=listing,
-                    latestbid=latestbid,
-                    saved_cards=saved_cards,
-                    amount_due=amount_due
-                )
+                return render_template("payment.html",user=buyer_email,role=session["role"],listing=listing,latestbid=latestbid,saved_cards=saved_cards,amount_due=amount_due)
 
         transaction_ID = random.randint(100000, 999999)
         date = "2026-04-21"
@@ -903,15 +965,7 @@ def payment(seller_email, listing_ID):
 
         if not done:
             flash("Payment failed. Please try again.")
-            return render_template(
-                "payment.html",
-                user=buyer_email,
-                role=session["role"],
-                listing=listing,
-                latestbid=latestbid,
-                saved_cards=saved_cards,
-                amount_due=amount_due
-            )
+            return render_template("payment.html",user=buyer_email,role=session["role"],listing=listing,latestbid=latestbid,saved_cards=saved_cards,amount_due=amount_due)
 
         add_to_seller_balance(seller_email, amount_due)
         sell_listing(seller_email, listing_ID)
@@ -919,15 +973,7 @@ def payment(seller_email, listing_ID):
         flash("Payment successful.")
         return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
 
-    return render_template(
-        "payment.html",
-        user=buyer_email,
-        role=session["role"],
-        listing=listing,
-        latestbid=latestbid,
-        saved_cards=saved_cards,
-        amount_due=amount_due
-    )
+    return render_template("payment.html",user=buyer_email,role=session["role"],listing=listing,latestbid=latestbid,saved_cards=saved_cards,amount_due=amount_due)
 
 
 @app.route("/seller")
@@ -994,6 +1040,7 @@ def auction_listing(seller_email, listing_ID):
     numbids = len(bids)
     rating_data = get_ratings(seller_email)
     ratings = []
+    #debug statement for divide by zero error
     if rating_data:
         for rating in rating_data:
             ratings.append(float(rating["rating"]))
@@ -1002,135 +1049,148 @@ def auction_listing(seller_email, listing_ID):
     else:
         avg_rating = 0
 
-    # find latest/current bid just by maximum bid_price
+    # find latest bid just by maximum bid_price
     latestbid = get_latest_bid(bids)
 
+    #variables for rating restrictions
+    can_rate = False
+    already_rated = False
+
+    if "user" in session and session.get("role") == "buyer":
+        buyer_email = session["user"]
+        transaction = get_transaction_for_buyer_listing(seller_email, listing_ID, buyer_email)
+        existing_rating = get_existing_rating(buyer_email, seller_email)
+
+        if transaction is not None:
+            can_rate = True
+
+        if existing_rating is not None:
+            already_rated = True
+
     if request.method == "POST":
-        new_bid_raw = request.form.get("new_bid", "").strip()
+        action = request.form.get("action", "").strip()
 
-        if not new_bid_raw:
-            flash("Please enter a price.")
-            return render_template(
-                "auction_listing.html",
-                user=session["user"],
-                role=session["role"],
-                seller_type=session.get("seller_type", "none"),
-                listing=listing,
-                bids=bids,
-                numbids=numbids,
-                latestbid=latestbid,
-                avg_rating=avg_rating
-            )
+        if action == "submit_rating":
+            buyer_email = session["user"]
+            rating_raw = request.form.get("rating_value", "").strip()
 
-        try:
-            new_bid = int(new_bid_raw)
-        except ValueError:
-            flash("Bid must be a valid number.")
-            return render_template(
-                "auction_listing.html",
-                user=session["user"],
-                role=session["role"],
-                seller_type=session.get("seller_type", "none"),
-                listing=listing,
-                bids=bids,
-                numbids=numbids,
-                latestbid=latestbid,
-                avg_rating=avg_rating
-            )
+            transaction = get_transaction_for_buyer_listing(seller_email, listing_ID, buyer_email)
 
-        if session["user"] == seller_email:
-            flash("You cannot bid on your own listing.")
-            return render_template(
-                "auction_listing.html",
-                user=session["user"],
-                role=session["role"],
-                seller_type=session.get("seller_type", "none"),
-                listing=listing,
-                bids=bids,
-                numbids=numbids,
-                latestbid=latestbid,
-                avg_rating=avg_rating
-            )
-
-        if listing["status"] != 1:
-            flash("This auction is no longer active.")
-            return render_template(
-                "auction_listing.html",
-                user=session["user"],
-                role=session["role"],
-                seller_type=session.get("seller_type", "none"),
-                listing=listing,
-                bids=bids,
-                numbids=numbids,
-                latestbid=latestbid,
-                avg_rating=avg_rating
-            )
-
-        if latestbid is not None:
-            if session["user"] == latestbid["bidder_email"]:
-                flash("You cannot place consecutive bids.")
-                return render_template(
-                    "auction_listing.html",
-                    user=session["user"],
-                    role=session["role"],
-                    seller_type=session.get("seller_type", "none"),
-                    listing=listing,
-                    bids=bids,
-                    numbids=numbids,
-                    latestbid=latestbid,
-                    avg_rating=avg_rating
-                )
-
-            if new_bid <= latestbid["bid_price"]:
-                flash("Bid must be higher than current bid.")
-                return render_template(
-                    "auction_listing.html",
-                    user=session["user"],
-                    role=session["role"],
-                    seller_type=session.get("seller_type", "none"),
-                    listing=listing,
-                    bids=bids,
-                    numbids=numbids,
-                    latestbid=latestbid,
-                    avg_rating=avg_rating
-                )
-
-        success = insert_bid(seller_email, listing_ID, session["user"], new_bid)
-
-        if not success:
-            flash("Bid could not be placed. Check terminal for the database error.")
-            return render_template(
-                "auction_listing.html",
-                user=session["user"],
-                role=session["role"],
-                seller_type=session.get("seller_type", "none"),
-                listing=listing,
-                bids=bids,
-                numbids=numbids,
-                latestbid=latestbid,
-                avg_rating=avg_rating
-            )
-
-        bids = get_bids(listing_ID)
-        numbids = len(bids)
-        latestbid = get_latest_bid(bids)
-
-        if numbids >= listing["max_bids"]:
-            if latestbid is not None and latestbid["bid_price"] >= listing["reserve_price"]:
-                if session["user"] == latestbid["bidder_email"]:
-                    flash("You won the auction. Please complete payment.")
-                    return redirect(url_for("payment", seller_email=seller_email, listing_ID=listing_ID))
-                else:
-                    flash("Auction has ended. You did not win this item.")
-                    return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
-            else:
-                deactivate_listing(seller_email, listing_ID)
-                flash("Reserve price was not met. Auction closed.")
+            #ensure user won auction before rating
+            if transaction is None:
+                flash("You can only rate a seller after purchasing this item.")
                 return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
 
-        flash("Bid placed successfully.")
+            existing_rating = get_existing_rating(buyer_email, seller_email)
+
+            #ensure user hasnt already rated
+            if existing_rating is not None:
+                flash("You have already rated this seller.")
+                return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
+
+            try:
+                #whole number check for inputted rating
+                rating_value = int(rating_raw)
+            except ValueError:
+                flash("Rating must be a whole number from 1 to 5.")
+                return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
+            #rating domain restriction
+            if rating_value < 1 or rating_value > 5:
+                flash("Rating must be between 1 and 5.")
+                return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
+
+            rating_desc = f"Seller rated {rating_value}/5"
+            done = insert_rating(buyer_email, seller_email, rating_value, rating_desc)
+
+            if not done:
+                flash("Rating could not be submitted.")
+                return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
+
+            flash("Seller rating submitted successfully.")
+            return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
+
+        if action == "place_bid":
+            new_bid_raw = request.form.get("new_bid", "").strip()
+
+            if not new_bid_raw:
+                flash("Please enter a price.")
+                return render_template("auction_listing.html",user=session["user"],role=session["role"],seller_type=session.get("seller_type", "none"),listing=listing,bids=bids,numbids=numbids,latestbid=latestbid,avg_rating=avg_rating, can_rate=can_rate, already_rated=already_rated )
+
+            try:
+                new_bid = int(new_bid_raw)
+            except ValueError:
+                #valid inputted number check for bid
+                flash("Bid must be a valid number.")
+                return render_template("auction_listing.html",user=session["user"],role=session["role"],
+                seller_type=session.get("seller_type", "none"),listing=listing,bids=bids,numbids=numbids,latestbid=latestbid,avg_rating=avg_rating, can_rate=can_rate, already_rated=already_rated)
+
+            if session["user"] == seller_email:
+                flash("You cannot bid on your own listing.")
+                return render_template("auction_listing.html",user=session["user"],role=session["role"],seller_type=session.get("seller_type", "none"),listing=listing,bids=bids,numbids=numbids,latestbid=latestbid,avg_rating=avg_rating, can_rate = can_rate, already_rated=already_rated)
+
+            if listing["status"] != 1:
+                flash("This auction is no longer active.")
+                return render_template("auction_listing.html",user=session["user"],role=session["role"],seller_type=session.get("seller_type", "none"),listing=listing,bids=bids,numbids=numbids,latestbid=latestbid,avg_rating=avg_rating, can_rate = can_rate, already_rated=already_rated)
+
+            if latestbid is not None:
+                if session["user"] == latestbid["bidder_email"]:
+                    flash("You cannot place consecutive bids.")
+                    return render_template("auction_listing.html",user=session["user"],role=session["role"],seller_type=session.get("seller_type", "none"),listing=listing,bids=bids,numbids=numbids,latestbid=latestbid,avg_rating=avg_rating, can_rate = can_rate, already_rated=already_rated)
+
+                #restriction that new bid must be higher
+                if new_bid <= latestbid["bid_price"]:
+                    flash("Bid must be higher than current bid.")
+                    return render_template(
+                        "auction_listing.html",
+                        user=session["user"],
+                        role=session["role"],
+                        seller_type=session.get("seller_type", "none"),
+                        listing=listing,
+                        bids=bids,
+                        numbids=numbids,
+                        latestbid=latestbid,
+                        avg_rating=avg_rating)
+
+            success = insert_bid(seller_email, listing_ID, session["user"], new_bid)
+
+            if not success:
+                flash("Bid could not be placed. Check terminal for the database error.")
+                return render_template(
+                    "auction_listing.html",
+                    user=session["user"],
+                    role=session["role"],
+                    seller_type=session.get("seller_type", "none"),
+                    listing=listing,
+                    bids=bids,
+                    numbids=numbids,
+                    latestbid=latestbid,
+                    avg_rating=avg_rating)
+
+            bids = get_bids(listing_ID)
+            numbids = len(bids)
+            latestbid = get_latest_bid(bids)
+
+            #all restrictions are met scenario - buyer wins
+            if numbids >= listing["max_bids"]:
+                if latestbid is not None and latestbid["bid_price"] >= listing["reserve_price"]:
+                    if session["user"] == latestbid["bidder_email"]:
+                        flash("You won the auction. Please complete payment.")
+                        return redirect(url_for("payment", seller_email=seller_email, listing_ID=listing_ID))
+                    else:
+                        flash("Auction has ended. You did not win this item.")
+                        return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
+                else:
+                    deactivate_listing(seller_email, listing_ID)
+                    flash("Reserve price was not met. Auction closed.")
+                    return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
+
+            flash("Bid placed successfully.")
+            return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
+
+        flash("Invalid form submission.")
         return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
-    return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid, avg_rating=avg_rating)
+
+    return render_template("auction_listing.html", user=session["user"], role=session["role"], seller_type=session["seller_type"], listing=listing, bids=bids, numbids=numbids, latestbid=latestbid, avg_rating=avg_rating, can_rate = can_rate, already_rated=already_rated)
 
 @app.route("/sell_item", methods=["GET", "POST"])
 def sell_item():
@@ -1152,13 +1212,13 @@ def sell_item():
             flash("Please complete all fields.")
             return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
         
-        # NOTE
+        # NOTE!!!
         # listing_IDs for auction_listings seem to be randomly generated numbers in the given dataset
-        # in order to insert new listings while making sure listing_IDs are unique...
+        # in order to insert new listings while making sure listing_IDs are unique
         # we will keep schema as is and just increment ID numbers from the highest existing ID for each seller
         
         # E.g.
-        # if a seller has 2 listings with IDs of 4 and 281...
+        # if a seller has 2 listings with IDs of 4 and 281
         # making a new listing will have an ID of 282
         seller_listings = get_seller_listings(session["user"])
         listing_IDs = []
@@ -1168,7 +1228,6 @@ def sell_item():
         new_listing_ID = max(listing_IDs) + 1 # creating new listing_ID
         insert_listing(session["user"], new_listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids)
 
-        # flash("Item successfully added!")
         return redirect(url_for("seller"))
     
     return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
@@ -1232,7 +1291,7 @@ def register():
     if request.method == "POST":
         # Attempt to insert the user into the DB
         if insert_new_user(request.form):
-            # AUTO-LOGIN LOGIC START
+            # auto-login start
             email = request.form.get("email").strip()
             role = request.form.get("role")
 
@@ -1256,7 +1315,7 @@ def register():
                 return redirect(url_for("buyer"))
             else:
                 return redirect(url_for("seller"))
-            # AUTO-LOGIN LOGIC END
+            # auto login logic end
 
         flash("Registration failed. Email might already exist.")
     return render_template("register.html")
@@ -1283,7 +1342,7 @@ def my_account():
             cursor = conn.cursor(dictionary=True)
 
             if action == "update_profile":
-                # Update Password
+                # update Password
                 new_pw = request.form.get("password", "").strip()
                 if new_pw:
                     hashed = hashlib.sha256(new_pw.encode()).hexdigest()
@@ -1314,6 +1373,7 @@ def my_account():
 
             elif action == "update_payment":
                 if role == "buyer":
+                    #get credit card info
                     credit_card_num = request.form.get("credit_card_num", "").strip()
                     card_type = request.form.get("card_type", "").strip()
                     expire_month = request.form.get("expire_month", "").strip()
@@ -1326,7 +1386,7 @@ def my_account():
                         cursor.execute("REPLACE INTO Credit_Cards(credit_card_num, card_type, expire_month, expire_year, security_code, owner_email) VALUES (%s,%s,%s,%s,%s,%s)", (credit_card_num,card_type,expire_month,expire_year,security_code,email))
                         flash("Payment card updated!")
                 else:
-                    # Banking for Sellers/Vendors
+                    # banking for Sellers/Vendors
                     bank_routing_number = request.form.get("bank_routing_number", "").strip()
                     bank_account_number = request.form.get("bank_account_number", "").strip()
                     cursor.execute("UPDATE Sellers SET bank_routing_number = %s,bank_account_number = %s WHERE email = %s", (bank_routing_number, bank_account_number, email))
