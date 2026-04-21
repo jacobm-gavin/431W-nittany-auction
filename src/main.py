@@ -720,13 +720,9 @@ def auction_listing(seller_email, listing_ID):
     for rating in rating_data:
         ratings.append(float(rating["rating"]))
 
-    # print(ratings)
+    print(ratings)
 
-    if ratings:
-        avg_rating = sum(ratings) / len(ratings)
-    else:
-        avg_rating = None
-
+    avg_rating = sum(ratings) / len(ratings)
     # find latest/current bid just by maximum bid_price
     latestbid = get_latest_bid(bids)
 
@@ -795,10 +791,7 @@ def sell_item():
         for listing in seller_listings:
             listing_IDs.append(listing["listing_ID"])
 
-        if listing_IDs:
-            new_listing_ID = max(listing_IDs) + 1 # creating new listing_ID
-        else:
-            new_listing_ID = 1
+        new_listing_ID = max(listing_IDs) + 1 # creating new listing_ID
         insert_listing(session["user"], new_listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids)
 
         flash("Item successfully added!")
@@ -985,68 +978,6 @@ def my_account():
     #print(f"Template Data: {current_data}")
 
     return render_template("my_account.html", user_info=current_data)
-
-
-@app.route("/search")
-def search():
-    query_param = request.args.get('q', '').strip()
-    min_p = request.args.get('min_p')
-    max_p = request.args.get('max_p')
-
-    try:
-        conn = mysql.connector.connect(
-            host="localhost", user="root",
-            password=os.getenv("DB_PASSWORD"), database="nittanyauction"
-        )
-        cursor = conn.cursor(dictionary=True)
-
-        cursor.execute("SELECT category_name, parent_category FROM categories")
-        rows = cursor.fetchall()
-        categories_dict = {}
-        for row in rows:
-            parent = row['parent_category'] or "Root"
-            if parent not in categories_dict:
-                categories_dict[parent] = []
-            categories_dict[parent].append(row['category_name'])
-
-        # Statement to search specific listings
-        search_sql = """
-                     SELECT * \
-                     FROM auction_listings
-                     WHERE (product_name LIKE %s OR product_description LIKE %s
-                         OR category LIKE %s OR auction_title LIKE %s OR seller_email LIKE %s)
-                       AND status = 1 \
-                     """
-        search_val = f"%{query_param}%"
-        # Use user value to search in name, description, category, title, or seller
-        params = [search_val, search_val, search_val, search_val, search_val]
-
-        # Set min and max prices if given
-        if min_p:
-            search_sql += " AND reserve_price >= %s"
-            params.append(min_p)
-        if max_p:
-            search_sql += " AND reserve_price <= %s"
-            params.append(max_p)
-
-        cursor.execute(search_sql, tuple(params))
-        results = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
-
-        # Render with filtered listings
-        return render_template("buyer.html",
-                               listings=results,
-                               categories=categories_dict,
-                               name=session.get('name', 'User'),
-                               user=session.get('user'),
-                               role=session.get('role'),
-                               category=f"Search Results: {query_param}")
-
-    except Exception as e:
-        print(f"Search Error: {e}")
-        return redirect(url_for('buyer'))
 
 if __name__ == "__main__":
     app.run(debug=True)
