@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import hashlib
+from datetime import datetime
 import mysql.connector
 from dotenv import load_dotenv
 import random
@@ -244,9 +245,7 @@ def get_specific_card(owner_email, credit_card_num):
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute("SELECT * FROM credit_cards WHERE owner_email = %s AND credit_card_num = %s LIMIT 1", (owner_email, credit_card_num))
-
         card = cursor.fetchone()
-
         cursor.close()
         conn.close()
 
@@ -266,6 +265,9 @@ def insert_transaction(transaction_ID, seller_email, listing_ID, buyer_email, da
         )
 
         cursor = conn.cursor()
+
+        now = datetime.now()
+        date = f"{now.month}/{now.day}/{str(now.year)[2:]}"
 
         cursor.execute("INSERT INTO transactions (transaction_ID, seller_email, listing_ID, buyer_email, date, payment) VALUES (%s, %s, %s, %s, %s, %s)", (transaction_ID, seller_email, listing_ID, buyer_email, date, payment))
 
@@ -726,7 +728,8 @@ def insert_rating(bidder_email, seller_email, rating_value, rating_desc):
         )
         cursor = conn.cursor()
 
-        date = "2026-04-21"
+        now = datetime.now()
+        date = f"{now.month}/{now.day}/{str(now.year)[2:]}"
 
         cursor.execute(
             "INSERT INTO rating (bidder_email, seller_email, date, rating, rating_desc) VALUES (%s, %s, %s, %s, %s)",
@@ -1099,7 +1102,12 @@ def auction_listing(seller_email, listing_ID):
                 flash("Rating must be between 1 and 5.")
                 return redirect(url_for("auction_listing", seller_email=seller_email, listing_ID=listing_ID))
 
-            rating_desc = f"Seller rated {rating_value}/5"
+            if rating_value == 5 or rating_value == 4:
+                rating_desc = "Awesome"
+            elif rating_value == 3:
+                rating_desc = "Not Bad"
+            else:
+                rating_desc = "Bad"
             done = insert_rating(buyer_email, seller_email, rating_value, rating_desc)
 
             if not done:
