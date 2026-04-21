@@ -145,8 +145,8 @@
                                 <div class="mb-4">
                                     <label class="card-label">Saved Cards</label>
 
-                                    {% if user_info.card %}
-                                        {% for card in user_info.card %}
+                                    {% if user_info.cards %}
+                                        {% for card in user_info.cards %}
                                             <div class="border rounded-3 p-3 mb-2 bg-light">
                                             <div><strong>Card Number:</strong> {{ card.credit_card_num }}</div>
                                             <div><strong>Type:</strong> {{ card.card_type }}</div>
