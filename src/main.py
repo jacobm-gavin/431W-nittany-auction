@@ -422,18 +422,18 @@ def get_full_profile(email):
         profile = cursor.fetchone()
 
         if not profile:
-            return {'email': email, 'card': {}}
+            return {'email': email, 'cards': []}
 
-        cursor.execute("SELECT * FROM credit_cards WHERE owner_email = %s LIMIT 1", (email,))
-        card_data = cursor.fetchone()
-        profile['card'] = card_data if card_data else {}
+        cursor.execute("SELECT * FROM credit_cards WHERE owner_email = %s ORDER BY credit_card_num", (email,))
+        card_data = cursor.fetchall()
+        profile['cards'] = card_data if card_data else []
 
         cursor.close()
         conn.close()
         return profile
     except Exception as e:
         print(f"CRITICAL ERROR: {e}")
-        return {'email': email, 'card': {}}
+        return {'email': email, 'cards': []}
     
 def get_ratings(seller_email):
     try:
@@ -1314,19 +1314,33 @@ def my_account():
 
             elif action == "update_payment":
                 if role == "buyer":
-                    # Credit Card for Bidders
-                    cc_num = request.form.get("cc_num", "").strip()
-                    cursor.execute("""
-                                   REPLACE
-                                   INTO Credit_Cards (credit_card_num, card_type, expire_month, expire_year, security_code, Owner_email)
-                        VALUES (%s, %s, %s, %s, %s, %s) """, (cc_num, request.form.get("cc_type"), request.form.get("exp_m"), request.form.get("exp_y"), request.form.get("cvv"), email))
-                    flash("Payment card updated!")
+                    credit_card_num = request.form.get("credit_card_num", "").strip()
+                    card_type = request.form.get("card_type", "").strip()
+                    expire_month = request.form.get("expire_month", "").strip()
+                    expire_year = request.form.get("expire_year", "").strip()
+                    security_code = request.form.get("security_code", "").strip()
+
+                    if not credit_card_num or not card_type or not expire_month or not expire_year or not security_code:
+                        flash("Please fill in all credit card fields.")
+                    else:
+                        cursor.execute("REPLACE INTO Credit_Cards(credit_card_num, card_type, expire_month, expire_year, security_code, owner_email) VALUES (%s,%s,%s,%s,%s,%s)", (credit_card_num,card_type,expire_month,expire_year,security_code,email))
+                        flash("Payment card updated!")
                 else:
                     # Banking for Sellers/Vendors
-                    routing = request.form.get("routing_num", "").strip()
-                    account = request.form.get("account_num", "").strip()
-                    cursor.execute("""UPDATE Sellers SET routing_num = %s, account_num = %s WHERE email = %s""", (routing, account, email))
+                    bank_routing_number = request.form.get("bank_routing_number", "").strip()
+                    bank_account_number = request.form.get("bank_account_number", "").strip()
+                    cursor.execute("UPDATE Sellers SET bank_routing_number = %s,bank_account_number = %s WHERE email = %s", (bank_routing_number, bank_account_number, email))
                     flash("Banking information updated!")
+
+            elif action == "delete_card":
+                if role == "buyer":
+                    delete_card_num = request.form.get("delete_card_num", "").strip()
+
+                    if not delete_card_num:
+                        flash("No card was selected for deletion.")
+                    else:
+                        cursor.execute("DELETE FROM Credit_Cards WHERE credit_card_num = %s AND owner_email = %s", (delete_card_num, email))
+                        flash("Card deleted successfully.")
 
             # Auto fill description for requesting email change
             elif action == "request_email_change":
