@@ -48,7 +48,7 @@
             <div class="col-6">
                 {% with messages = get_flashed_messages() %}
                     {% if messages %}
-                        {% if messages[0] == "Item successfully updated!" or messages[0] == "Bid successfully placed!" %}
+                        {% if messages[0] == "Item successfully updated!" or messages[0] == "Bid placed successfully." or messages[0] == "Payment successful." %}
                             <div class="alert alert-primary m-auto mt-3" role="alert">
                                 <p class="text-center mb-0">{{ messages[0] }}</p>
                             </div>

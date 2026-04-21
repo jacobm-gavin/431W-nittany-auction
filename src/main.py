@@ -424,8 +424,8 @@ def get_full_profile(email):
         if not profile:
             return {'email': email, 'card': {}}
 
-        cursor.execute("SELECT * FROM credit_cards WHERE owner_email = %s LIMIT 1", (email,))
-        card_data = cursor.fetchone()
+        cursor.execute("SELECT * FROM credit_cards WHERE owner_email = %s", (email,))
+        card_data = cursor.fetchall()
         profile['card'] = card_data if card_data else {}
 
         cursor.close()
@@ -1349,7 +1349,7 @@ def my_account():
     current_data = get_full_profile(email)
 
     # DEBUG print
-    #print(f"Template Data: {current_data}")
+    print(f"Template Data: {current_data}")
 
     return render_template("my_account.html", user_info=current_data)
 
