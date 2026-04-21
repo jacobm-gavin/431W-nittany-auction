@@ -67,7 +67,7 @@
             <!-- RIGHT SIDE: PAYMENT FORM -->
             <div id="payment-content" class="ms-4 w-75">
                 <h1 class="fw-bold fs-1">Complete Payment</h1>
-                <p class="fw-light fs-5">Logged in as: {{ user }}</p>
+                <p class="text-muted small mb-4">Logged in as: {{ user }}</p>
 
                 {% with messages = get_flashed_messages() %}
                     {% if messages %}

@@ -35,6 +35,15 @@
         <div class="col-md-9 col-lg-10">
             <div class="d-flex justify-content-center align-items-end mb-4">
                 <div class="ms-4 w-75">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-primary mb-4">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
                     <h1 class="fw-bold m-0">{{ name }}'s Seller Dashboard</h1>
                     <p class="text-muted small mb-0">Logged in as: {{ user }}</p> <!-- this can also be placeholder text, will probably move something like this into a pop-up under the "My Account" button -->
                     

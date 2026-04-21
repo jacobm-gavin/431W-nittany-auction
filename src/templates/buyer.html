@@ -71,14 +71,26 @@
 
             <div class="col-md-9 col-lg-10">
                 <div class="d-flex justify-content-between align-items-end mb-3">
-                    <div>
-                        <h2 class="fw-bold m-0">Welcome, {{ name }}</h2>
-                        <p class="text-muted small mb-3">Browsing as: {{ user }}</p>
-                        {% for notif in notifications %}
-                            <div class="alert alert-primary px-4">You did not win the auction for the <strong>{{ notif.auction_title }}</strong>.</div>
-                        {% endfor %}
-                    </div>
+                        <div class="col-4">
+                            <h2 class="fw-bold m-0">Welcome, {{ name }}</h2>
+                            <p class="text-muted small mb-3">Browsing as: {{ user }}</p>
+                        </div>
+                        <div class="col-4">
+                            {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <div class="text-center alert alert-primary mb-4 px-5">
+                                            Registration successful! Welcome to NittanyAuction!
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="col-4"></div>
                 </div>
+                {% for notif in notifications %}
+                    <div class="alert alert-primary px-4">You did not win the auction for the <strong>{{ notif.auction_title }}</strong>.</div>
+                {% endfor %}
                 
                     {% if listings %}
                         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">

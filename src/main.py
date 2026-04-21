@@ -874,7 +874,7 @@ def payment(seller_email, listing_ID):
 
     buyer_email = session["user"]
 
-    if session.get("role") != "buyer":
+    if session.get("seller_type") == "vendor":
         flash("Only buyers can complete payments.")
         return redirect(url_for("login"))
 
@@ -1258,7 +1258,10 @@ def sell_item():
         for listing in seller_listings:
             listing_IDs.append(listing["listing_ID"])
 
-        new_listing_ID = max(listing_IDs) + 1 # creating new listing_ID
+        if listing_IDs:
+            new_listing_ID = max(listing_IDs) + 1 # creating new listing_ID
+        else:
+            new_listing_ID = 1
         insert_listing(session["user"], new_listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids)
 
         # flash("Item successfully added!")
@@ -1291,7 +1294,7 @@ def edit_item(seller_email, listing_ID):
         listing = get_listing(seller_email, listing_ID)
 
         flash("Item successfully updated!")
-        return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
+        return redirect(f"/auction_listing/{seller_email}/{listing_ID}")
     
     return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
 
