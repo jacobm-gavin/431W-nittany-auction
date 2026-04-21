@@ -179,7 +179,7 @@ def get_categories():
         return None
 
 
-def get_bids(listing_ID):
+def get_bids(seller_email, listing_ID):
     try:
         conn = mysql.connector.connect(
             host="localhost",
@@ -190,7 +190,7 @@ def get_bids(listing_ID):
 
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("SELECT * FROM bids WHERE Listing_ID = %s", (listing_ID,))
+        cursor.execute("SELECT * FROM bids WHERE seller_email = %s AND listing_ID = %s", (seller_email, listing_ID,))
         bids = cursor.fetchall()
 
         if bids is None:
@@ -251,6 +251,30 @@ def get_specific_card(owner_email, credit_card_num):
         conn.close()
 
         return card
+
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+    
+def get_notifications(bidder_email):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM notifications WHERE bidder_email = %s", (bidder_email,))
+
+        notifications = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return notifications
 
     except mysql.connector.Error as err:
         print("Database error:", err)
@@ -595,6 +619,29 @@ def insert_bid(seller_email, listing_ID, bidder_email, bid_price):
         print("Database error:", err)
         return False
 
+def insert_notification(seller_email, listing_ID, bidder_email):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("INSERT INTO notifications VALUES (%s, %s, %s)", (seller_email, listing_ID, bidder_email,))
+
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        print("SUCCESSFULLY INSERTED NOTFICATION")
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+
 # SQL UPDATES
 
 def update_listing(seller_email, listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids):
@@ -663,6 +710,31 @@ def sell_listing(seller_email, listing_ID):
         cursor.close()
         conn.close()
         print("SUCCESSFULLY SOLD LISTING")
+    
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+        return None
+
+# SQL DELETES
+
+def delete_notifications(bidder_email):
+    try:
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.getenv("DB_PASSWORD"),
+            database="nittanyauction"
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("DELETE FROM notifications WHERE bidder_email = %s", (bidder_email,))
+
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        print("SUCCESSFULLY DELETED NOTFICATIONS")
     
     except mysql.connector.Error as err:
         print("Database error:", err)
@@ -758,11 +830,27 @@ def buyer():
     categories = parse_categories(get_categories())
     category = None
     email = session["user"]
+    notifications = get_notifications(email)
+
+    for notif in notifications:
+        listing = get_listing(notif["seller_email"], notif["listing_ID"])
+        notif["auction_title"] = listing["auction_title"]
+
+    if notifications:
+        delete_notifications(email)
+
     name = get_first_name(email)
     if name == None:
         name = get_business_name(email)
 
-    return render_template("buyer.html", user=session["user"], role=session["role"], name=name, listings=listings, categories=categories, category=category)
+    return render_template("buyer.html",
+                           user=session["user"],
+                           role=session["role"],
+                           name=name,
+                           listings=listings,
+                           categories=categories,
+                           category=category,
+                           notifications=notifications)
 
 @app.route("/buyer/<string:category>")
 def buyer_category(category):
@@ -795,7 +883,7 @@ def payment(seller_email, listing_ID):
         flash("Listing not found.")
         return redirect(url_for("buyer"))
 
-    bids = get_bids(listing_ID)
+    bids = get_bids(seller_email, listing_ID)
     latestbid = get_latest_bid(bids)
 
     if latestbid is None:
@@ -990,7 +1078,7 @@ def auction_listing(seller_email, listing_ID):
         flash("Listing not found.")
         return redirect(url_for("buyer"))
 
-    bids = get_bids(listing_ID)
+    bids = get_bids(seller_email, listing_ID)
     numbids = len(bids)
     rating_data = get_ratings(seller_email)
     ratings = []
@@ -1111,11 +1199,16 @@ def auction_listing(seller_email, listing_ID):
                 avg_rating=avg_rating
             )
 
-        bids = get_bids(listing_ID)
+        bids = get_bids(seller_email, listing_ID)
         numbids = len(bids)
         latestbid = get_latest_bid(bids)
 
         if numbids >= listing["max_bids"]:
+            # users_to_notify = []
+            for bid in bids:
+                if bid["bidder_email"] != latestbid["bidder_email"]:
+                    insert_notification(seller_email, listing_ID, bid["bidder_email"])
+
             if latestbid is not None and latestbid["bid_price"] >= listing["reserve_price"]:
                 if session["user"] == latestbid["bidder_email"]:
                     flash("You won the auction. Please complete payment.")
@@ -1215,7 +1308,7 @@ def remove_item(seller_email, listing_ID):
             return render_template("remove_item.html")
         
         listing = get_listing(seller_email, listing_ID)
-        bids = get_bids(listing_ID)
+        bids = get_bids(seller_email, listing_ID)
         numbids = len(bids)
         remaining_bids = listing["max_bids"] - numbids
 
