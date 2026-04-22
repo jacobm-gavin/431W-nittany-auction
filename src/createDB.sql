@@ -134,4 +134,13 @@ CREATE TABLE IF NOT EXISTS Listing_Audit (
     removal_reason VARCHAR(255) NOT NULL,
     PRIMARY KEY (seller_email, listing_ID),
     FOREIGN KEY (seller_email, listing_ID) REFERENCES Auction_Listings(seller_email, listing_ID)
+);
+
+CREATE TABLE IF NOT EXISTS Notifications (
+    seller_email VARCHAR(255) NOT NULL,
+    listing_ID INTEGER NOT NULL,
+    bidder_email VARCHAR(255) NOT NULL,
+    PRIMARY KEY (seller_email, listing_ID, bidder_email),
+    FOREIGN KEY (seller_email, listing_ID) REFERENCES Auction_Listings(seller_email, listing_ID),
+    FOREIGN KEY (bidder_email) REFERENCES Bidders(email)
 )

@@ -50,7 +50,8 @@
                     {% if messages %}
                         {% if messages[0] == "Item successfully updated!"
                            or messages[0] == "Bid placed successfully."
-                           or messages[0] == "Seller rating submitted successfully." %}
+                           or messages[0] == "Seller rating submitted successfully."
+                           or messages[0] == "Payment successful." %}
                             <div class="alert alert-primary m-auto mt-3" role="alert">
                                 <p class="text-center mb-0">{{ messages[0] }}</p>
                             </div>
@@ -73,7 +74,7 @@
 
     <div class="d-flex flex-row justify-content-center">
         <div class="d-flex mx-5 justify-content-center align-items-start gap-4" style="height: 60vh; width: 75vw;">
-            <div id="auction-info" class="card p-4 rounded-4 border w-100">
+            <div id="auction-info" class="card p-4 rounded-4 border w-100 mb-4">
                 <h1>{{ listing.auction_title }}</h1>
                 <p class="card-text fw-light fs-5">{{ listing.category }}</p>
                 {% if listing.status == 2 %}
@@ -106,7 +107,7 @@
                     </form>
                 {% endif %}
             </div>
-            <div id="product-info" class="card p-4 rounded-4 border w-100">
+            <div id="product-info" class="card p-4 rounded-4 border w-100 mb-4">
                 <div class="fw-bold fs-5 card-text">Product Name</div>
                 <p class="card-text fs-5 fw-light">{{ listing.product_name }}</p>
                 <div class="fw-bold fs-5 card-text">Description</div>

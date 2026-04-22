@@ -153,47 +153,48 @@
                                             <div><strong>Expires:</strong> {{ card.expire_month }}/{{ card.expire_year }}</div>
                                             <div><strong>CVV:</strong> {{ card.security_code }}</div>
 
-                    <!-- OPTIONAL: delete button for each saved card -->
-                    <button type="button"
-                            class="btn btn-sm btn-outline-danger mt-2"
-                            onclick="deleteCard('{{ card.credit_card_num }}')">
-                        Delete Card
-                    </button>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p class="text-muted mb-0">No saved cards.</p>
-        {% endif %}
-    </div>
+                                                <!-- OPTIONAL: delete button for each saved card -->
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-danger mt-2"
+                                                        onclick="deleteCard('{{ card.credit_card_num }}')">
+                                                    Delete Card
+                                                </button>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted mb-0">No saved cards.</p>
+                                    {% endif %}
+                                </div>
 
-    <hr class="my-4">
+                                <!-- ADD A NEW CARD -->
+                                 <div id="add-new-card" style="display: none;">
+                                    <hr class="my-4">
+                                    <h6 class="fw-bold">Add a New Card</h6>
 
-    <!-- ADD A NEW CARD -->
-    <h6 class="fw-bold">Add a New Card</h6>
+                                    <div class="mb-3">
+                                        <label class="card-label">Card Number</label>
+                                        <input type="text" name="credit_card_num" class="form-control" placeholder="Enter new card number">
+                                    </div>
 
-    <div class="mb-3">
-        <label class="card-label">Card Number</label>
-        <input type="text" name="credit_card_num" class="form-control" placeholder="Enter new card number">
-    </div>
-
-    <div class="row g-2">
-        <div class="col-6">
-            <label class="card-label">Type</label>
-            <input type="text" name="card_type" class="form-control" placeholder="Visa">
-        </div>
-        <div class="col-2">
-            <label class="card-label">Exp M</label>
-            <input type="text" name="expire_month" class="form-control" placeholder="01">
-        </div>
-        <div class="col-2">
-            <label class="card-label">Exp Y</label>
-            <input type="text" name="expire_year" class="form-control" placeholder="2028">
-        </div>
-        <div class="col-2">
-            <label class="card-label">CVV</label>
-            <input type="text" name="security_code" class="form-control" placeholder="123">
-        </div>
-    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="card-label">Type</label>
+                                            <input type="text" name="card_type" class="form-control" placeholder="Visa">
+                                        </div>
+                                        <div class="col-2">
+                                            <label class="card-label">Exp M</label>
+                                            <input type="text" name="expire_month" class="form-control" placeholder="01">
+                                        </div>
+                                        <div class="col-2">
+                                            <label class="card-label">Exp Y</label>
+                                            <input type="text" name="expire_year" class="form-control" placeholder="2028">
+                                        </div>
+                                        <div class="col-2">
+                                            <label class="card-label">CVV</label>
+                                            <input type="text" name="security_code" class="form-control" placeholder="123">
+                                        </div>
+                                    </div>
+                                </div>
                             {% else %}
                                 <div class="row g-3">
                                     <div class="col-md-6">
@@ -240,6 +241,13 @@
                 f.classList.add('edit-mode');
             });
             document.getElementById('toggleEdit').style.display = 'none';
+            var addCardDiv = document.getElementById('add-new-card');
+            if (addCardDiv.style.display == 'none') {
+                addCardDiv.style.display = 'block';
+            }
+            else {
+                addCardDiv.style.display = 'none';
+            }
         }
 
         function showEmailPrompt() {
