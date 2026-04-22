@@ -107,7 +107,7 @@
                     </form>
                 {% endif %}
             </div>
-            <div id="product-info" class="card p-4 rounded-4 border w-100 mb-4">
+            <div id="product-info" class="card p-4 rounded-4 border w-100 mb-5">
                 <div class="fw-bold fs-5 card-text">Product Name</div>
                 <p class="card-text fs-5 fw-light">{{ listing.product_name }}</p>
                 <div class="fw-bold fs-5 card-text">Description</div>
@@ -126,10 +126,10 @@
 
                 {% if listing.status == 2 and can_rate and not already_rated %}
                     <hr>
-                    <div class="fw-bold fs-5 card-text mb-2">Rate This Seller</div>
-                    <p class="card-text fw-light fs-6 text-secondary mb-3">
+                    <div class="fw-bold fs-5 card-text">Rate This Seller</div>
+                    <div class="card-text fw-light fs-6 text-secondary mb-3">
                         Your transaction is complete. Please rate your experience with this seller.
-                    </p>
+                    </div>
 
                     <form method="POST">
                         <input type="hidden" name="action" value="submit_rating">

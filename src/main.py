@@ -1147,7 +1147,7 @@ def auction_listing(seller_email, listing_ID):
     can_rate = False
     already_rated = False
 
-    if "user" in session and session.get("role") == "buyer":
+    if "user" in session and (session.get("role") == "buyer" or session.get("seller_type") != "vendor"):
         buyer_email = session["user"]
         transaction = get_transaction_for_buyer_listing(seller_email, listing_ID, buyer_email)
         existing_rating = get_existing_rating(buyer_email, seller_email)
@@ -1298,6 +1298,17 @@ def sell_item():
         return redirect(url_for("login"))
     
     categories = parse_categories(get_categories())
+    # going to have to convert categories into just a flat, non-hierarchical array of all categories to render in page
+    all_categories = set()
+
+    for parent, children in categories.items():
+        all_categories.add(parent)
+        all_categories.update(children)
+
+    if 'Root' in all_categories:
+        all_categories.remove('Root')
+
+    flat_category_list = sorted(list(all_categories))
 
     if request.method == "POST":
         auction_title = request.form.get("auction_title", "").strip()
@@ -1310,7 +1321,7 @@ def sell_item():
 
         if not auction_title or not product_name or not product_description or not reserve_price or not quantity or not max_bids or category == "Select a category":
             flash("Please complete all fields.")
-            return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
+            return render_template("sell_item.html", user=session["user"], categories=flat_category_list, seller_type=session["seller_type"])
         
         # NOTE!!!
         # listing_IDs for auction_listings seem to be randomly generated numbers in the given dataset
@@ -1333,7 +1344,7 @@ def sell_item():
 
         return redirect(url_for("seller"))
     
-    return render_template("sell_item.html", user=session["user"], categories=categories, seller_type=session["seller_type"])
+    return render_template("sell_item.html", user=session["user"], categories=flat_category_list, seller_type=session["seller_type"])
 
 @app.route("/edit_item/<string:seller_email>/<int:listing_ID>", methods=["GET", "POST"])
 def edit_item(seller_email, listing_ID):
@@ -1342,6 +1353,16 @@ def edit_item(seller_email, listing_ID):
     
     listing = get_listing(seller_email, listing_ID)
     categories = parse_categories(get_categories())
+    all_categories = set()
+
+    for parent, children in categories.items():
+        all_categories.add(parent)
+        all_categories.update(children)
+
+    if 'Root' in all_categories:
+        all_categories.remove('Root')
+
+    flat_category_list = sorted(list(all_categories))
 
     if request.method == "POST":
         auction_title = request.form.get("auction_title", "").strip()
@@ -1354,7 +1375,7 @@ def edit_item(seller_email, listing_ID):
 
         if auction_title is "" or product_name is "" or product_description is "" or reserve_price is "" or quantity is "" or max_bids is "" or category is "":
             flash("Please fill in all fields.")
-            return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
+            return render_template("edit_item.html", user=session["user"], listing=listing, categories=flat_category_list, seller_type=session["seller_type"])
         
         update_listing(seller_email, listing_ID, category, auction_title, product_name, product_description, quantity, reserve_price, max_bids)
         listing = get_listing(seller_email, listing_ID)
@@ -1362,7 +1383,7 @@ def edit_item(seller_email, listing_ID):
         flash("Item successfully updated!")
         return redirect(f"/auction_listing/{seller_email}/{listing_ID}")
     
-    return render_template("edit_item.html", user=session["user"], listing=listing, categories=categories, seller_type=session["seller_type"])
+    return render_template("edit_item.html", user=session["user"], listing=listing, categories=flat_category_list, seller_type=session["seller_type"])
 
 @app.route("/remove_item/<string:seller_email>/<int:listing_ID>", methods=["GET", "POST"])
 def remove_item(seller_email, listing_ID):
