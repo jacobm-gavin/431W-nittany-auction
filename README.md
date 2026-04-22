@@ -1,6 +1,31 @@
 # NittanyAuction
 Working files for 431W DB Management Project phase 1 + phase 2
 
+## Project Description
+NittanyAuction is a prototyped web application allowing users to sell, buy, and edit auction items, similarly to other shopping sites like eBay. NittanyAuction's main purpose is demonstrating the use of a relational database management system to fulfill this task.
+
+## File Organization
+`/src` - All source code for the project, including `main.py` to run the application.  
+`/src/templates` - All of the raw HTML templates used for each page.  
+`/public` - Any SVGs or icons  
+`/dataset` - The provided dataset, including all `csv` files for populating the database.  
+
+## Implemented Features
+- User Login (Bidder/Seller/HelpDesk)
+- Category Hierarchy
+- Auction Listing Management (Sellers)
+    - Seller Home Page
+    - Editing/Removing Listings
+    - Preserving Historical Information
+- Auction Bidding (Bidders)
+    - Bidding Rules/Restrictions
+    - Auction Completion and Notifications  
+    - Payment Flow  
+- User Registration
+- User Profile Update
+- Product Search
+- Ratings
+
 ## Links
 - [Team Contract](https://pennstateoffice365-my.sharepoint.com/:w:/r/personal/jam9201_psu_edu/_layouts/15/Doc.aspx?sourcedoc=%7B524cc132-0567-45f7-85a8-2b2d145660ef%7D&action=edit&wdLOR=c2DC118A9-E1A5-C049-B526-AB67AB616484&wdPid=777d90ac)
 - [Final Report](https://pennstateoffice365-my.sharepoint.com/:w:/r/personal/jmg7896_psu_edu/_layouts/15/Doc.aspx?sourcedoc=%7B91FA7E13-9488-45CC-8F09-6B7A5FBADC71%7D&file=Document%201.docx&action=editNew&mobileredirect=true&wdOrigin=WAC.WORD.HOME-BUTTON%2CAPPHOME-WEB.BANNER.NEWBLANK&wdPreviousSession=fef1d5eb-53eb-43ce-005d-9957e38b5a84&wdPreviousSessionSrc=Wac&ct=1770923261069)
